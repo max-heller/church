@@ -1,7 +1,17 @@
-use generic_array::ArrayLength;
-
 pub mod basic;
 pub mod compute;
 pub mod recursive;
 
-pub trait Unsigned: ArrayLength<usize> {}
+#[macro_export]
+macro_rules! funcs {
+    ($N:ty; $($g:expr),*) => {
+        generic_array::arr![&'_ dyn crate::compute::Computable<$N>; $($g,)*]
+    }
+}
+
+#[macro_export]
+macro_rules! args {
+    ($($x:expr),*) => {
+        generic_array::arr![usize; $($x,)*]
+    }
+}

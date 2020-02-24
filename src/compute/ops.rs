@@ -1,7 +1,7 @@
 use super::{Computable, Compute};
+use crate::args;
 use crate::recursive::{PrimitiveRecursive, Recursive};
 use generic_array::{
-    arr,
     functional::FunctionalSequence,
     sequence::{Concat, Shorten},
     ArrayLength, GenericArray,
@@ -13,20 +13,31 @@ use typenum::{bit::B1, consts::*, Add1, Sub1, Sum, Unsigned};
 pub struct Cn<'g, F, N, M>
 where
     F: Recursive<M>,
-    N: ArrayLength<&'g dyn Computable<N>>,
+    N: Unsigned,
     M: ArrayLength<&'g dyn Computable<N>>,
 {
     f: F,
     gs: GenericArray<&'g dyn Computable<N>, M>,
 }
 
-impl<'g, F, N, M> PrimitiveRecursive<N> for Cn<'g, F, N, M>
+impl<'g, F, N, M> Cn<'g, F, N, M>
 where
-    F: PrimitiveRecursive<M>,
-    N: ArrayLength<&'g dyn Computable<N>>,
+    F: Recursive<M>,
+    N: Unsigned,
     M: ArrayLength<&'g dyn Computable<N>>,
 {
+    pub fn new(f: F, gs: GenericArray<&'g dyn Computable<N>, M>) -> Self {
+        Cn { f, gs }
+    }
 }
+
+// impl<'g, F, N, M> PrimitiveRecursive<N> for Cn<'g, F, N, M>
+// where
+//     F: PrimitiveRecursive<M>,
+//     N: ArrayLength<&'g dyn Computable<N>>,
+//     M: ArrayLength<&'g dyn Computable<N>>,
+// {
+// }
 
 impl<'g, F, N, M> Recursive<N> for Cn<'g, F, N, M>
 where
@@ -111,48 +122,67 @@ where
         let (x, y) = x.pop_back();
         let mut output = self.f.call(x.clone());
         for y in 0..y {
-            output = self.g.call(x.clone().concat(arr![usize; y, output]));
+            output = self.g.call(x.clone().concat(args![y, output]));
         }
         output
     }
 }
 
 #[test]
+fn test_cn() {
+    use crate::basic::*;
+    use crate::{funcs, id};
+
+    let cn = Cn::new(Succ {}, funcs![U2; &id![U2, U1]]);
+    assert_eq!(1, cn.call(args![0, 1]));
+
+    let cn = Cn::new(Succ {}, funcs![U2; &id![U2, U2]]);
+    assert_eq!(2, cn.call(args![0, 1]));
+
+    let cn = Cn::new(id![U2, U2], funcs![U1; &id![U1, U1], &Succ{}]);
+    assert_eq!(2, cn.call(args![1]));
+
+    let cn = Cn::new(id![U2, U1], funcs![U1; &id![U1, U1], &Succ{}]);
+    assert_eq!(1, cn.call(args![1]));
+}
+
+#[test]
 fn test_pr() {
     use crate::basic::*;
+    use crate::id;
 
     // pr = Pr[z, id^3_3]
-    let pr = Pr::new(Zero {}, Id::<U3, U3>::new());
-    assert_eq!(0, pr.call(arr![usize; 1, 0]));
-    assert_eq!(0, pr.call(arr![usize; 5, 0]));
-    assert_eq!(0, pr.call(arr![usize; 5, 1]));
-    assert_eq!(0, pr.call(arr![usize; 5, 2]));
-    assert_eq!(0, pr.call(arr![usize; 5, 50]));
+    let pr = Pr::new(Zero {}, id![U3, U3]);
+    assert_eq!(0, pr.call(args![1, 0]));
+    assert_eq!(0, pr.call(args![5, 0]));
+    assert_eq!(0, pr.call(args![5, 1]));
+    assert_eq!(0, pr.call(args![5, 2]));
+    assert_eq!(0, pr.call(args![5, 50]));
 
     // pr = Pr[s, id^3_3]
-    let pr = Pr::new(Succ {}, Id::<U3, U3>::new());
-    assert_eq!(1, pr.call(arr![usize; 0, 0]));
-    assert_eq!(2, pr.call(arr![usize; 1, 0]));
-    assert_eq!(5, pr.call(arr![usize; 4, 0]));
-    assert_eq!(5, pr.call(arr![usize; 4, 9]));
+    let pr = Pr::new(Succ {}, id![U3, U3]);
+    assert_eq!(1, pr.call(args![0, 0]));
+    assert_eq!(2, pr.call(args![1, 0]));
+    assert_eq!(5, pr.call(args![4, 0]));
+    assert_eq!(5, pr.call(args![4, 9]));
 
     // pr = Pr[id, id^3_3]
-    let pr = Pr::new(Id::<U1, U1>::new(), Id::<U3, U3>::new());
-    assert_eq!(4, pr.call(arr![usize; 4, 0]));
-    assert_eq!(4, pr.call(arr![usize; 4, 9]));
+    let pr = Pr::new(id![U1, U1], id![U3, U3]);
+    assert_eq!(4, pr.call(args![4, 0]));
+    assert_eq!(4, pr.call(args![4, 9]));
 
     // pr = Pr[id, id^3_1]
     // should always output x
-    let pr = Pr::new(Id::<U1, U1>::new(), Id::<U3, U1>::new());
-    assert_eq!(4, pr.call(arr![usize; 4, 0]));
-    assert_eq!(4, pr.call(arr![usize; 4, 9]));
+    let pr = Pr::new(id![U1, U1], id![U3, U1]);
+    assert_eq!(4, pr.call(args![4, 0]));
+    assert_eq!(4, pr.call(args![4, 9]));
 
     // pr = Pr[id, id^3_2]
     // should always output y for s(y) if y > 0, x otherwise
     // because h(x, s(y)) = g(x, y, h(x, y))
-    let pr = Pr::new(Id::<U1, U1>::new(), Id::<U3, U2>::new());
-    assert_eq!(4, pr.call(arr![usize; 4, 0]));
-    assert_eq!(8, pr.call(arr![usize; 4, 9]));
+    let pr = Pr::new(id![U1, U1], id![U3, U2]);
+    assert_eq!(4, pr.call(args![4, 0]));
+    assert_eq!(8, pr.call(args![4, 9]));
 }
 
 //pub struct Mn<F: Recursive<N>, const N: usize> {

@@ -4,13 +4,20 @@ use generic_array::{ArrayLength, GenericArray};
 use typenum::{consts::U1, NonZero, Unsigned};
 mod ops;
 
-trait Computable<N>: Recursive<N> + Compute<N>
+pub trait Computable<N>: Recursive<N> + Compute<N>
 where
     N: ArrayLength<usize>,
 {
 }
 
-trait Compute<N>: Recursive<N>
+impl<T, N> Computable<N> for T
+where
+    T: Recursive<N> + Compute<N>,
+    N: ArrayLength<usize>,
+{
+}
+
+pub trait Compute<N>: Recursive<N>
 where
     N: ArrayLength<usize>,
 {

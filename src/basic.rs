@@ -26,6 +26,13 @@ where
     }
 }
 
+#[macro_export]
+macro_rules! id {
+    ($N:ty, $K:ty) => {
+        Id::<$N, $K>::new()
+    };
+}
+
 impl PrimitiveRecursive<U1> for Zero {}
 impl PrimitiveRecursive<U1> for Succ {}
 impl<N, K> PrimitiveRecursive<N> for Id<N, K>
