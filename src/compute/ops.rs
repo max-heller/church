@@ -1,7 +1,8 @@
-use super::Compute;
+use super::{Computable, Compute};
 use crate::recursive::{PrimitiveRecursive, Recursive};
 use generic_array::{
     arr,
+    functional::FunctionalSequence,
     sequence::{Concat, Shorten},
     ArrayLength, GenericArray,
 };
@@ -9,109 +10,108 @@ use std::marker::PhantomData;
 use std::ops::{Add, Sub};
 use typenum::{bit::B1, consts::*, Add1, Sub1, Sum, Unsigned};
 
-pub struct Cn<
-    'g,
+pub struct Cn<'g, F, N, M>
+where
     F: Recursive<M>,
-    N: ArrayLength<&'g dyn Recursive<N>>,
-    M: ArrayLength<&'g dyn Recursive<N>>,
-> {
-    f: PhantomData<F>,
-    g: GenericArray<&'g dyn Recursive<N>, M>,
+    N: ArrayLength<&'g dyn Computable<N>>,
+    M: ArrayLength<&'g dyn Computable<N>>,
+{
+    f: F,
+    gs: GenericArray<&'g dyn Computable<N>, M>,
 }
 
-impl<
-        'g,
-        F: PrimitiveRecursive<M>,
-        N: ArrayLength<&'g dyn PrimitiveRecursive<N>> + ArrayLength<&'g dyn Recursive<N>>,
-        M: ArrayLength<&'g dyn PrimitiveRecursive<N>> + ArrayLength<&'g dyn Recursive<N>>,
-    > PrimitiveRecursive<N> for Cn<'g, F, N, M>
+impl<'g, F, N, M> PrimitiveRecursive<N> for Cn<'g, F, N, M>
+where
+    F: PrimitiveRecursive<M>,
+    N: ArrayLength<&'g dyn Computable<N>>,
+    M: ArrayLength<&'g dyn Computable<N>>,
 {
 }
 
-impl<
-        'g,
-        F: Recursive<M>,
-        N: ArrayLength<&'g dyn Recursive<N>>,
-        M: ArrayLength<&'g dyn Recursive<N>>,
-    > Recursive<N> for Cn<'g, F, N, M>
+impl<'g, F, N, M> Recursive<N> for Cn<'g, F, N, M>
+where
+    F: Recursive<M>,
+    N: ArrayLength<&'g dyn Computable<N>>,
+    M: ArrayLength<&'g dyn Computable<N>>,
 {
 }
 
-impl<
-        'g,
-        F: Recursive<M>,
-        N: ArrayLength<&'g dyn Recursive<N>> + ArrayLength<usize>,
-        M: ArrayLength<&'g dyn Recursive<N>>,
-    > Compute<N> for Cn<'g, F, N, M>
+impl<'g, F, N, M> Compute<N> for Cn<'g, F, N, M>
+where
+    F: Recursive<M> + Compute<M>,
+    N: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize>,
+    M: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize>,
 {
-    fn compute(x: GenericArray<usize, N>) -> usize {
-        unimplemented!()
+    fn call(&self, x: GenericArray<usize, N>) -> usize {
+        self.f.call((&self.gs).map(|g| g.call(x.clone())))
     }
 }
 
-pub struct Pr<F: Recursive<Sub1<N>>, G: Recursive<Add1<N>>, N: Unsigned + Sub<B1> + Add<B1>>
+pub struct Pr<F, G, N>
 where
+    F: Recursive<Sub1<N>>,
+    G: Recursive<Add1<N>>,
+    N: Unsigned + Sub<B1> + Add<B1>,
     Sub1<N>: Unsigned,
     Add1<N>: Unsigned,
 {
-    f: PhantomData<F>,
-    g: PhantomData<G>,
+    f: F,
+    g: G,
     n: PhantomData<N>,
 }
 
-impl<
-        F: Recursive<M>,
-        G: Recursive<Add1<N>>,
-        N: Unsigned + Sub<B1, Output = M> + Add<B1>,
-        M: Unsigned + Add<B1, Output = N>,
-    > Pr<F, G, N>
+impl<F, G, N, M> Pr<F, G, N>
 where
+    F: Recursive<M>,
+    G: Recursive<Add1<N>>,
+    N: Unsigned + Sub<B1, Output = M> + Add<B1>,
+    M: Unsigned + Add<B1, Output = N>,
     Sub1<N>: Unsigned,
     Add1<N>: Unsigned,
 {
-    pub fn new(_: F, _: G) -> Self {
+    pub fn new(f: F, g: G) -> Self {
         Pr {
-            f: PhantomData,
-            g: PhantomData,
+            f,
+            g,
             n: PhantomData,
         }
     }
 }
 
-impl<
-        F: PrimitiveRecursive<Sub1<N>>,
-        G: PrimitiveRecursive<Add1<N>>,
-        N: Unsigned + Sub<B1> + Add<B1>,
-    > PrimitiveRecursive<N> for Pr<F, G, N>
+impl<F, G, N> PrimitiveRecursive<N> for Pr<F, G, N>
 where
+    F: PrimitiveRecursive<Sub1<N>>,
+    G: PrimitiveRecursive<Add1<N>>,
+    N: Unsigned + Sub<B1> + Add<B1>,
     Sub1<N>: Unsigned,
     Add1<N>: Unsigned,
 {
 }
 
-impl<F: Recursive<Sub1<N>>, G: Recursive<Add1<N>>, N: Unsigned + Sub<B1> + Add<B1>> Recursive<N>
-    for Pr<F, G, N>
+impl<F, G, N> Recursive<N> for Pr<F, G, N>
 where
+    F: Recursive<Sub1<N>>,
+    G: Recursive<Add1<N>>,
+    N: Unsigned + Sub<B1> + Add<B1>,
     Sub1<N>: Unsigned,
     Add1<N>: Unsigned,
 {
 }
 
-impl<
-        F: Recursive<Sub1<N>> + Compute<Sub1<N>>,
-        G: Recursive<Add1<N>> + Compute<Add1<N>>,
-        N: ArrayLength<usize> + Sub<B1> + Add<B1>,
-    > Compute<N> for Pr<F, G, N>
+impl<F, G, N> Compute<N> for Pr<F, G, N>
 where
+    F: Recursive<Sub1<N>> + Compute<Sub1<N>>,
+    G: Recursive<Add1<N>> + Compute<Add1<N>>,
+    N: ArrayLength<usize> + Sub<B1> + Add<B1>,
     Add1<N>: Unsigned + ArrayLength<usize>,
     Sub1<N>: Unsigned + ArrayLength<usize> + Add<B1, Output = N> + Add<U2, Output = Add1<N>>,
     Sum<Sub1<N>, U2>: ArrayLength<usize>,
 {
-    fn compute(x: GenericArray<usize, N>) -> usize {
+    fn call(&self, x: GenericArray<usize, N>) -> usize {
         let (x, y) = x.pop_back();
-        let mut output = F::compute(x.clone());
+        let mut output = self.f.call(x.clone());
         for y in 0..y {
-            output = G::compute(x.clone().concat(arr![usize; y, output]));
+            output = self.g.call(x.clone().concat(arr![usize; y, output]));
         }
         output
     }
