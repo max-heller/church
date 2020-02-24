@@ -1,0 +1,15 @@
+[package]
+name = "church"
+version = "0.1.0"
+authors = ["mxheller <heller.max1@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "church"
+path = "src/lib.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+"generic-array" = "^0.13.2"
+"typenum" = "^1.11.2"
