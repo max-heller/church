@@ -4,13 +4,14 @@ use typenum::consts::*;
 
 // TODO: this is gross to make it type check, can I make it better?
 pub fn const_n(n: usize) -> impl Computable<U1> {
-    match n {
-        0 => Cn::new(id![U1, U1], funcs![U1; &Z]),
-        _ => Cn::new(
+    let mut f = Cn::new(id![U1, U1], funcs![U1; &Z]);
+    for _ in 0..n {
+        f = Cn::new(
             id![U1, U1],
             funcs![U1; &Cn::new(S, funcs![U1; &const_n(n - 1)])],
-        ),
+        );
     }
+    f
 }
 
 pub fn sum() -> impl Computable<U2> {
@@ -33,4 +34,32 @@ pub fn superpower() -> impl Computable<U2> {
         Cn::new(S, funcs![U1; &Z]),
         Cn::new(power(), funcs![U3; &id![U3, U1], &id![U3, U3]]),
     )
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{args, compute::Compute};
+    use quickcheck_macros::quickcheck;
+
+    // TODO: takes far too long, likely due to constructing function each time?
+    // #[quickcheck]
+    // fn const_n_is_n(n: usize, x: usize) -> bool {
+    //     Some(n) == const_n(n).call(args![x])
+    // }
+
+    #[quickcheck]
+    fn sum_is_sum(a: usize, b: usize) -> bool {
+        Some(a + b) == sum().call(args![a, b])
+    }
+
+    #[quickcheck]
+    fn product_is_product(a: usize, b: usize) -> bool {
+        Some(a * b) == product().call(args![a, b])
+    }
+
+    #[quickcheck]
+    fn power_is_power(a: u8, b: u8) -> bool {
+        Some((a as usize).pow(b as u32)) == power().call(args![a as usize, b as usize])
+    }
 }

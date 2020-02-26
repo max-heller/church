@@ -30,7 +30,7 @@ where
     N: Unsigned,
     M: ArrayLength<&'g dyn Computable<N>>,
 {
-    pub const fn new(f: F, gs: GenericArray<&'g dyn Computable<N>, M>) -> Self {
+    pub fn new(f: F, gs: GenericArray<&'g dyn Computable<N>, M>) -> Self {
         Cn { f, gs }
     }
 }
@@ -90,7 +90,7 @@ where
     Sub1<N>: Unsigned,
     Add1<N>: Unsigned,
 {
-    pub const fn new(f: F, g: G) -> Self {
+    pub fn new(f: F, g: G) -> Self {
         Pr {
             f,
             g,
@@ -155,7 +155,7 @@ where
     F: Recursive<N>,
     N: Unsigned,
 {
-    pub const fn new(f: F) -> Self {
+    pub fn new(f: F) -> Self {
         Mn { f, n: PhantomData }
     }
 }

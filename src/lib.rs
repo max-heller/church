@@ -1,4 +1,4 @@
-#![feature(const_fn)]
+#![feature(impl_trait_in_bindings)]
 
 pub mod compute;
 pub mod funcs;

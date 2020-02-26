@@ -22,7 +22,7 @@ where
     N: Unsigned + NonZero,
     K: Unsigned + NonZero,
 {
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Id {
             n: PhantomData,
             k: PhantomData,
