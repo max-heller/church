@@ -3,7 +3,11 @@ use std::marker::PhantomData;
 use typenum::{consts::U1, NonZero, Unsigned};
 
 pub struct Zero {}
+pub const Z: Zero = Zero {};
+
 pub struct Succ {}
+pub const S: Succ = Succ {};
+
 pub struct Id<N, K>
 where
     N: Unsigned + NonZero,
@@ -18,7 +22,7 @@ where
     N: Unsigned + NonZero,
     K: Unsigned + NonZero,
 {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Id {
             n: PhantomData,
             k: PhantomData,

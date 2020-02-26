@@ -30,11 +30,13 @@ where
     N: Unsigned,
     M: ArrayLength<&'g dyn Computable<N>>,
 {
-    pub fn new(f: F, gs: GenericArray<&'g dyn Computable<N>, M>) -> Self {
+    pub const fn new(f: F, gs: GenericArray<&'g dyn Computable<N>, M>) -> Self {
         Cn { f, gs }
     }
 }
 
+// TODO: Right now I'm unable to correctly mark primitive recursive compositions
+// as primitive recursive (instead, they're marked as recursive only)
 // impl<'g, F, N, M> PrimitiveRecursive<N> for Cn<'g, F, N, M>
 // where
 //     F: PrimitiveRecursive<M>,
@@ -88,7 +90,7 @@ where
     Sub1<N>: Unsigned,
     Add1<N>: Unsigned,
 {
-    pub fn new(f: F, g: G) -> Self {
+    pub const fn new(f: F, g: G) -> Self {
         Pr {
             f,
             g,
@@ -153,7 +155,7 @@ where
     F: Recursive<N>,
     N: Unsigned,
 {
-    pub fn new(f: F) -> Self {
+    pub const fn new(f: F) -> Self {
         Mn { f, n: PhantomData }
     }
 }
@@ -187,29 +189,27 @@ where
 
 #[test]
 fn test_cn() {
-    use crate::basic::*;
     use crate::*;
 
-    let cn = Cn::new(Succ {}, funcs![U2; &id![U2, U1]]);
+    let cn = Cn::new(S, funcs![U2; &id![U2, U1]]);
     defined_eq!(cn.call(args![0, 1]), 1);
 
-    let cn = Cn::new(Succ {}, funcs![U2; &id![U2, U2]]);
+    let cn = Cn::new(S, funcs![U2; &id![U2, U2]]);
     defined_eq!(cn.call(args![0, 1]), 2);
 
-    let cn = Cn::new(id![U2, U2], funcs![U1; &id![U1, U1], &Succ{}]);
+    let cn = Cn::new(id![U2, U2], funcs![U1; &id![U1, U1], &S]);
     defined_eq!(cn.call(args![1]), 2);
 
-    let cn = Cn::new(id![U2, U1], funcs![U1; &id![U1, U1], &Succ{}]);
+    let cn = Cn::new(id![U2, U1], funcs![U1; &id![U1, U1], &S]);
     defined_eq!(cn.call(args![1]), 1);
 }
 
 #[test]
 fn test_pr() {
-    use crate::basic::*;
     use crate::*;
 
     // pr = Pr[z, id^3_3]
-    let pr = Pr::new(Zero {}, id![U3, U3]);
+    let pr = Pr::new(Z, id![U3, U3]);
     defined_eq!(pr.call(args![1, 0]), 0);
     defined_eq!(pr.call(args![5, 0]), 0);
     defined_eq!(pr.call(args![5, 1]), 0);
@@ -217,7 +217,7 @@ fn test_pr() {
     defined_eq!(pr.call(args![5, 50]), 0);
 
     // pr = Pr[s, id^3_3]
-    let pr = Pr::new(Succ {}, id![U3, U3]);
+    let pr = Pr::new(S, id![U3, U3]);
     defined_eq!(pr.call(args![0, 0]), 1);
     defined_eq!(pr.call(args![1, 0]), 2);
     defined_eq!(pr.call(args![4, 0]), 5);

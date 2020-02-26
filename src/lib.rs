@@ -1,10 +1,10 @@
-#![feature(iter_map_while)]
+#![feature(const_fn)]
 
-pub mod basic;
 pub mod compute;
+pub mod funcs;
 pub mod recursive;
 
-pub use basic::*;
+pub use funcs::*;
 pub use recursive::*;
 
 #[macro_export]

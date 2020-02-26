@@ -1,11 +1,11 @@
 use crate::{
-    basic::{Id, Succ, Zero},
+    funcs::basic::{Id, Succ, Zero},
     recursive::Recursive,
 };
 use generic_array::{ArrayLength, GenericArray};
 use typenum::{consts::U1, NonZero, Unsigned};
 
-mod ops;
+pub mod ops;
 
 pub trait Computable<N>: Recursive<N> + Compute<N>
 where
