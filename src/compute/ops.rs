@@ -174,7 +174,7 @@ where
             match self.f.call(x.clone().append(y)) {
                 None => return None,
                 Some(0) => return Some(y),
-                Some(_) => (),
+                Some(_) => continue,
             }
         }
         return None;
@@ -243,4 +243,9 @@ fn test_mn() {
     use crate::*;
 
     let mn = Mn::new(id![U2, U2]);
+    defined_eq!(mn.call(args![5]), 0);
+
+    let mn = Mn::new(id![U2, U1]);
+    defined_eq!(mn.call(args![0]), 0);
+    // undefined for input != args![0]
 }
