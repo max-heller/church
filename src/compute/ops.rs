@@ -61,8 +61,8 @@ where
 {
     fn call(&self, x: GenericArray<usize, N>) -> Option<usize> {
         (&self.gs)
-            .map(|g| g.call(x.clone()))
             .into_iter()
+            .map(|g| g.call(x.clone()))
             .collect::<Option<Vec<usize>>>()
             .and_then(|x| self.f.call(GenericArray::clone_from_slice(&x)))
     }

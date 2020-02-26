@@ -39,7 +39,7 @@ pub fn superpower() -> impl Computable<U2> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{args, compute::Compute};
+    use crate::{args, compute::Compute, defined_eq};
     use quickcheck_macros::quickcheck;
 
     // TODO: takes far too long, likely due to constructing function each time?
@@ -58,8 +58,9 @@ mod test {
         Some(a * b) == product().call(args![a, b])
     }
 
-    #[quickcheck]
-    fn power_is_power(a: u8, b: u8) -> bool {
-        Some((a as usize).pow(b as u32)) == power().call(args![a as usize, b as usize])
+    #[test]
+    fn test_power() {
+        let pow = power();
+        defined_eq!(pow.call(args![2, 3]), 8);
     }
 }
