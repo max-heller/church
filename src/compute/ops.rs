@@ -137,9 +137,8 @@ where
 
 pub struct Mn<F, N>
 where
-    F: Recursive<Add1<N>>,
-    N: Unsigned + Add<B1>,
-    Add1<N>: Unsigned,
+    F: Recursive<N>,
+    N: Unsigned,
 {
     f: F,
     n: PhantomData<N>,
@@ -147,16 +146,15 @@ where
 
 impl<F, N> Mn<F, N>
 where
-    F: Recursive<Add1<N>>,
-    N: Unsigned + Add<B1>,
-    Add1<N>: Unsigned,
+    F: Recursive<N>,
+    N: Unsigned,
 {
     pub fn new(f: F) -> Self {
         Mn { f, n: PhantomData }
     }
 }
 
-impl<F, N> Recursive<N> for Mn<F, N>
+impl<F, N> Recursive<N> for Mn<F, Add1<N>>
 where
     F: Recursive<Add1<N>>,
     N: Unsigned + Add<B1>,
@@ -164,7 +162,7 @@ where
 {
 }
 
-impl<F, N> Compute<N> for Mn<F, N>
+impl<F, N> Compute<N> for Mn<F, Add1<N>>
 where
     F: Compute<Add1<N>>,
     N: ArrayLength<usize> + Add<B1>,
