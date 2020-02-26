@@ -1,13 +1,17 @@
 use super::{Computable, Compute};
-use crate::args;
-use crate::recursive::{PrimitiveRecursive, Recursive};
+use crate::{
+    args,
+    recursive::{PrimitiveRecursive, Recursive},
+};
 use generic_array::{
     functional::FunctionalSequence,
     sequence::{Concat, Lengthen, Shorten},
     ArrayLength, GenericArray,
 };
-use std::marker::PhantomData;
-use std::ops::{Add, Sub};
+use std::{
+    marker::PhantomData,
+    ops::{Add, Sub},
+};
 use typenum::{bit::B1, consts::*, Add1, Sub1, Sum, Unsigned};
 
 pub struct Cn<'g, F, N, M>
