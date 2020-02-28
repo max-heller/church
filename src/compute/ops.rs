@@ -4,7 +4,6 @@ use crate::{
     recursive::{PrimitiveRecursive, Recursive},
 };
 use generic_array::{
-    functional::FunctionalSequence,
     sequence::{Concat, Lengthen, Shorten},
     ArrayLength, GenericArray,
 };
@@ -32,6 +31,13 @@ where
 {
     pub fn new(f: F, gs: GenericArray<&'g dyn Computable<N>, M>) -> Self {
         Cn { f, gs }
+    }
+}
+
+#[macro_export]
+macro_rules! cn {
+    ($f:expr; $N:ty; $($g:expr),*) => {
+        Cn::new($f, funcs![$N; $(&$g),*])
     }
 }
 
@@ -99,6 +105,13 @@ where
     }
 }
 
+#[macro_export]
+macro_rules! pr {
+    ($f:expr, $g:expr) => {
+        Pr::new($f, $g)
+    };
+}
+
 impl<F, G, N> PrimitiveRecursive<N> for Pr<F, G, N>
 where
     F: PrimitiveRecursive<Sub1<N>>,
@@ -160,6 +173,13 @@ where
     }
 }
 
+#[macro_export]
+macro_rules! mn {
+    ($f:expr) => {
+        Mn::new($f)
+    };
+}
+
 impl<F, N> Recursive<N> for Mn<F, Add1<N>>
 where
     F: Recursive<Add1<N>>,
@@ -191,17 +211,17 @@ where
 fn test_cn() {
     use crate::*;
 
-    let cn = Cn::new(S, funcs![U2; &id![U2, U1]]);
-    defined_eq!(cn.call(args![0, 1]), 1);
+    let f = cn![S; U2; id![U2, U1]];
+    defined_eq!(f.call(args![0, 1]), 1);
 
-    let cn = Cn::new(S, funcs![U2; &id![U2, U2]]);
-    defined_eq!(cn.call(args![0, 1]), 2);
+    let f = cn![S; U2; id![U2, U2]];
+    defined_eq!(f.call(args![0, 1]), 2);
 
-    let cn = Cn::new(id![U2, U2], funcs![U1; &id![U1, U1], &S]);
-    defined_eq!(cn.call(args![1]), 2);
+    let f = cn![id![U2, U2]; U1; id![U1, U1], S];
+    defined_eq!(f.call(args![1]), 2);
 
-    let cn = Cn::new(id![U2, U1], funcs![U1; &id![U1, U1], &S]);
-    defined_eq!(cn.call(args![1]), 1);
+    let f = cn![id![U2, U1]; U1; id![U1, U1], S];
+    defined_eq!(f.call(args![1]), 1);
 }
 
 #[test]
@@ -209,47 +229,47 @@ fn test_pr() {
     use crate::*;
 
     // pr = Pr[z, id^3_3]
-    let pr = Pr::new(Z, id![U3, U3]);
-    defined_eq!(pr.call(args![1, 0]), 0);
-    defined_eq!(pr.call(args![5, 0]), 0);
-    defined_eq!(pr.call(args![5, 1]), 0);
-    defined_eq!(pr.call(args![5, 2]), 0);
-    defined_eq!(pr.call(args![5, 50]), 0);
+    let f = pr![Z, id![U3, U3]];
+    defined_eq!(f.call(args![1, 0]), 0);
+    defined_eq!(f.call(args![5, 0]), 0);
+    defined_eq!(f.call(args![5, 1]), 0);
+    defined_eq!(f.call(args![5, 2]), 0);
+    defined_eq!(f.call(args![5, 50]), 0);
 
     // pr = Pr[s, id^3_3]
-    let pr = Pr::new(S, id![U3, U3]);
-    defined_eq!(pr.call(args![0, 0]), 1);
-    defined_eq!(pr.call(args![1, 0]), 2);
-    defined_eq!(pr.call(args![4, 0]), 5);
-    defined_eq!(pr.call(args![4, 9]), 5);
+    let f = pr![S, id![U3, U3]];
+    defined_eq!(f.call(args![0, 0]), 1);
+    defined_eq!(f.call(args![1, 0]), 2);
+    defined_eq!(f.call(args![4, 0]), 5);
+    defined_eq!(f.call(args![4, 9]), 5);
 
     // pr = Pr[id, id^3_3]
-    let pr = Pr::new(id![U1, U1], id![U3, U3]);
-    defined_eq!(pr.call(args![4, 0]), 4);
-    defined_eq!(pr.call(args![4, 9]), 4);
+    let f = pr![id![U1, U1], id![U3, U3]];
+    defined_eq!(f.call(args![4, 0]), 4);
+    defined_eq!(f.call(args![4, 9]), 4);
 
     // pr = Pr[id, id^3_1]
     // should always output x
-    let pr = Pr::new(id![U1, U1], id![U3, U1]);
-    defined_eq!(pr.call(args![4, 0]), 4);
-    defined_eq!(pr.call(args![4, 9]), 4);
+    let f = pr![id![U1, U1], id![U3, U1]];
+    defined_eq!(f.call(args![4, 0]), 4);
+    defined_eq!(f.call(args![4, 9]), 4);
 
     // pr = Pr[id, id^3_2]
     // should always output y for s(y) if y > 0, x otherwise
     // because h(x, s(y)) = g(x, y, h(x, y))
-    let pr = Pr::new(id![U1, U1], id![U3, U2]);
-    defined_eq!(pr.call(args![4, 0]), 4);
-    defined_eq!(pr.call(args![4, 9]), 8);
+    let f = pr![id![U1, U1], id![U3, U2]];
+    defined_eq!(f.call(args![4, 0]), 4);
+    defined_eq!(f.call(args![4, 9]), 8);
 }
 
 #[test]
 fn test_mn() {
     use crate::*;
 
-    let mn = Mn::new(id![U2, U2]);
-    defined_eq!(mn.call(args![5]), 0);
+    let f = mn![id![U2, U2]];
+    defined_eq!(f.call(args![5]), 0);
 
-    let mn = Mn::new(id![U2, U1]);
-    defined_eq!(mn.call(args![0]), 0);
+    let f = mn![id![U2, U1]];
+    defined_eq!(f.call(args![0]), 0);
     // undefined for input != args![0]
 }
