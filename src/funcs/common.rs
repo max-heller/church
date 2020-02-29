@@ -1,39 +1,33 @@
 use super::basic::*;
-use crate::{compute::ops::*, compute::Computable, funcs, id};
+use crate::{compute::ops::*, compute::Computable, *};
 use typenum::consts::*;
 
 // TODO: this is gross to make it type check, can I make it better?
 pub fn const_n(n: usize) -> impl Computable<U1> {
-    let mut f = Cn::new(id![U1, U1], funcs![U1; &Z]);
+    let mut f = cn![id![U1, U1]; U1; Z];
     for _ in 0..n {
-        f = Cn::new(
-            id![U1, U1],
-            funcs![U1; &Cn::new(S, funcs![U1; &const_n(n - 1)])],
-        );
+        f = cn![
+            id![U1, U1]; U1;
+            cn![S; U1; const_n(n - 1)]
+        ];
     }
     f
 }
 
 pub fn sum() -> impl Computable<U2> {
-    Pr::new(id![U1, U1], Cn::new(S, funcs![U3; &id![U3, U3]]))
+    pr![id![U1, U1], cn![S; U3; id![U3, U3]]]
 }
 
 pub fn product() -> impl Computable<U2> {
-    Pr::new(Z, Cn::new(sum(), funcs![U3; &id![U3, U1], &id![U3, U3]]))
+    pr![Z, cn![sum(); U3; id![U3, U1], id![U3, U3]]]
 }
 
 pub fn power() -> impl Computable<U2> {
-    Pr::new(
-        Cn::new(S, funcs![U1; &Z]),
-        Cn::new(product(), funcs![U3; &id![U3, U1], &id![U3, U3]]),
-    )
+    pr![cn![S; U1; Z], cn![product(); U3; id![U3, U1], id![U3, U3]]]
 }
 
 pub fn superpower() -> impl Computable<U2> {
-    Pr::new(
-        Cn::new(S, funcs![U1; &Z]),
-        Cn::new(power(), funcs![U3; &id![U3, U1], &id![U3, U3]]),
-    )
+    pr![cn![S; U1; Z], cn![power(); U3; id![U3, U1], id![U3, U3]]]
 }
 
 #[cfg(test)]
