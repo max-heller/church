@@ -1,6 +1,6 @@
 use crate::recursive::{PrimitiveRecursive, Recursive};
-use std::marker::PhantomData;
-use typenum::{consts::U1, NonZero, Unsigned};
+use std::{marker::PhantomData, ops::Sub};
+use typenum::{consts::U1, Diff, NonZero, Unsigned};
 
 pub struct Zero {}
 pub const Z: Zero = Zero {};
@@ -19,8 +19,9 @@ where
 
 impl<N, K> Id<N, K>
 where
-    N: Unsigned + NonZero,
+    N: Unsigned + NonZero + Sub<K>,
     K: Unsigned + NonZero,
+    Diff<N, K>: Unsigned,
 {
     pub fn new() -> Self {
         Id {
