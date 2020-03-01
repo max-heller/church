@@ -24,17 +24,17 @@ pub trait Compute<N>: Recursive<N>
 where
     N: ArrayLength<usize>,
 {
-    fn call(&self, x: GenericArray<usize, N>) -> Option<usize>;
+    fn call(&self, x: &GenericArray<usize, N>) -> Option<usize>;
 }
 
 impl Compute<U1> for Zero {
-    fn call(&self, _: GenericArray<usize, U1>) -> Option<usize> {
+    fn call(&self, _: &GenericArray<usize, U1>) -> Option<usize> {
         Some(0)
     }
 }
 
 impl Compute<U1> for Succ {
-    fn call(&self, x: GenericArray<usize, U1>) -> Option<usize> {
+    fn call(&self, x: &GenericArray<usize, U1>) -> Option<usize> {
         Some(x[0] + 1)
     }
 }
@@ -44,7 +44,7 @@ where
     N: ArrayLength<usize> + NonZero,
     K: Unsigned + NonZero,
 {
-    fn call(&self, x: GenericArray<usize, N>) -> Option<usize> {
+    fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
         Some(x[K::USIZE - 1])
     }
 }

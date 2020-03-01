@@ -65,12 +65,12 @@ where
     N: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize>,
     M: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize> + ArrayLength<Option<usize>>,
 {
-    fn call(&self, x: GenericArray<usize, N>) -> Option<usize> {
+    fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
         (&self.gs)
             .into_iter()
-            .map(|g| g.call(x.clone()))
+            .map(|g| g.call(x))
             .collect::<Option<Vec<usize>>>()
-            .and_then(|x| self.f.call(GenericArray::clone_from_slice(&x)))
+            .and_then(|x| self.f.call(GenericArray::from_slice(&x)))
     }
 }
 
@@ -141,12 +141,17 @@ where
     Sub1<N>: Unsigned + ArrayLength<usize> + Add<B1, Output = N> + Add<U2, Output = Add1<N>>,
     Sum<Sub1<N>, U2>: ArrayLength<usize>,
 {
-    fn call(&self, x: GenericArray<usize, N>) -> Option<usize> {
-        let (x, y) = x.pop_back();
-        let mut output = self.f.call(x.clone());
+    fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
+        let (x, y) = x.clone().pop_back();
+        let mut output = self.f.call(&x);
+        let mut input = x.concat(*args![0, 0]);
         for y in 0..y {
             match output {
-                Some(out) => output = self.g.call(x.clone().concat(args![y, out])),
+                Some(out) => {
+                    input[N::USIZE - 1] = y;
+                    input[N::USIZE] = out;
+                    output = self.g.call(&input);
+                }
                 None => return None,
             }
         }
@@ -195,9 +200,11 @@ where
     Add1<N>: ArrayLength<usize> + Sub<B1, Output = N>,
     Sub1<Add1<N>>: ArrayLength<usize>,
 {
-    fn call(&self, x: GenericArray<usize, N>) -> Option<usize> {
+    fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
+        let mut input = x.clone().append(0);
         for y in 0.. {
-            match self.f.call(x.clone().append(y)) {
+            input[N::USIZE] = y;
+            match self.f.call(&input) {
                 None => return None,
                 Some(0) => return Some(y),
                 Some(_) => continue,
@@ -272,4 +279,17 @@ fn test_mn() {
     let f = mn![id![U2, U1]];
     defined_eq!(f.call(args![0]), 0);
     // undefined for input != args![0]
+}
+
+#[cfg(test)]
+mod bench {
+    extern crate test;
+    use test::Bencher;
+    #[bench]
+    fn bench_pr(b: &mut Bencher) {
+        use crate::{compute::Compute, *};
+        let f = power();
+        let x = args![5, 5];
+        b.iter(|| f.call(x))
+    }
 }
