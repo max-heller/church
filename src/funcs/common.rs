@@ -46,12 +46,32 @@ pub fn difference() -> impl Computable<U2> {
     pr!(id![U1, U1], cn![predecessor(); U3; id![U3, U3]])
 }
 
-pub fn antisignum() -> impl Computable<U1> {
-    cn![difference(); U1; cn![S; U1; Z], id![U1, U1]]
+// This causes segfaults in rust right now, hopefully it won't in the future
+// pub fn antisignum() -> impl Computable<U1> {
+//     cn![difference(); U1; cn![S; U1; Z], id![U1, U1]]
+// }
+// Stopgap solution:
+pub struct Antisignum {}
+pub const antisignum: Antisignum = Antisignum {};
+impl Recursive<U1> for Antisignum {}
+impl crate::compute::Compute<U1> for Antisignum {
+    fn call(&self, x: &generic_array::GenericArray<usize, U1>) -> Option<usize> {
+        Some(1usize.saturating_sub(x[0]))
+    }
 }
 
-pub fn signum() -> impl Computable<U1> {
-    cn![difference(); U1; cn![S; U1; Z], antisignum()]
+// This causes segfaults in rust right now, hopefully it won't in the future
+// pub fn signum() -> impl Computable<U1> {
+//     cn![difference(); U1; cn![S; U1; Z], antisignum]
+// }
+// Stopgap solution:
+pub struct Signum {}
+pub const signum: Signum = Signum {};
+impl Recursive<U1> for Signum {}
+impl crate::compute::Compute<U1> for Signum {
+    fn call(&self, x: &generic_array::GenericArray<usize, U1>) -> Option<usize> {
+        Some(1usize.saturating_sub(1usize.saturating_sub(x[0])))
+    }
 }
 
 #[cfg(test)]
@@ -92,20 +112,13 @@ mod test {
         Some(x.saturating_sub(y)) == difference().call(args![x, y])
     }
 
-    #[test]
-    fn antisignum_is_antisignum() {
-        let asg = antisignum();
-        // defined_eq!(asg.call(args![0]), 1);
-        // defined_eq!(asg.call(args![1]), 1);
+    #[quickcheck]
+    fn antisignum_is_antisignum(x: usize) -> bool {
+        Some(1usize.saturating_sub(x)) == antisignum.call(args![x])
     }
 
-    // #[quickcheck]
-    // fn antisignum_is_antisignum(x: usize) -> bool {
-    //     Some(1usize.saturating_sub(x)) == antisignum().call(args![x])
-    // }
-
-    // #[quickcheck]
-    // fn signum_is_signum(x: usize) -> bool {
-    //     Some(1usize.saturating_sub(1usize.saturating_sub(x))) == signum().call(args![x])
-    // }
+    #[quickcheck]
+    fn signum_is_signum(x: usize) -> bool {
+        Some(1usize.saturating_sub(1usize.saturating_sub(x))) == signum.call(args![x])
+    }
 }

@@ -1,6 +1,3 @@
-#![feature(impl_trait_in_bindings)]
-#![feature(test)]
-
 pub mod compute;
 pub mod funcs;
 pub mod recursive;

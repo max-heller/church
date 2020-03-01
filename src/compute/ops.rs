@@ -66,10 +66,10 @@ where
     M: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize> + ArrayLength<Option<usize>>,
 {
     fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
-        (&self.gs)
-            .into_iter()
+        self.gs
+            .iter()
             .map(|g| g.call(x))
-            .collect::<Option<Vec<usize>>>()
+            .collect::<Option<Vec<_>>>()
             .and_then(|x| self.f.call(GenericArray::from_slice(&x)))
     }
 }
@@ -279,17 +279,4 @@ fn test_mn() {
     let f = mn![id![U2, U1]];
     defined_eq!(f.call(args![0]), 0);
     // undefined for input != args![0]
-}
-
-#[cfg(test)]
-mod bench {
-    extern crate test;
-    use test::Bencher;
-    #[bench]
-    fn bench_pr(b: &mut Bencher) {
-        use crate::{compute::Compute, *};
-        let f = power();
-        let x = args![5, 5];
-        b.iter(|| f.call(x))
-    }
 }
