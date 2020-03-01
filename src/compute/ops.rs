@@ -54,7 +54,7 @@ macro_rules! cn {
 impl<'g, F, N, M> Recursive<N> for Cn<'g, F, N, M>
 where
     F: Recursive<M>,
-    N: ArrayLength<&'g dyn Computable<N>>,
+    N: Unsigned,
     M: ArrayLength<&'g dyn Computable<N>>,
 {
 }
@@ -62,8 +62,8 @@ where
 impl<'g, F, N, M> Compute<N> for Cn<'g, F, N, M>
 where
     F: Recursive<M> + Compute<M>,
-    N: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize>,
-    M: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize> + ArrayLength<Option<usize>>,
+    N: ArrayLength<usize>,
+    M: ArrayLength<usize> + ArrayLength<&'g dyn Computable<N>>,
 {
     fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
         self.gs
@@ -137,8 +137,8 @@ where
     F: Recursive<Sub1<N>> + Compute<Sub1<N>>,
     G: Recursive<Add1<N>> + Compute<Add1<N>>,
     N: ArrayLength<usize> + Sub<B1> + Add<B1>,
-    Add1<N>: Unsigned + ArrayLength<usize>,
-    Sub1<N>: Unsigned + ArrayLength<usize> + Add<B1, Output = N> + Add<U2, Output = Add1<N>>,
+    Add1<N>: ArrayLength<usize>,
+    Sub1<N>: ArrayLength<usize> + Add<B1, Output = N> + Add<U2, Output = Add1<N>>,
     Sum<Sub1<N>, U2>: ArrayLength<usize>,
 {
     fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
