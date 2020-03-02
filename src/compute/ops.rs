@@ -54,7 +54,7 @@ macro_rules! cn {
 impl<'g, F, N, M> Recursive<N> for Cn<'g, F, N, M>
 where
     F: Recursive<M>,
-    N: ArrayLength<&'g dyn Computable<N>>,
+    N: Unsigned,
     M: ArrayLength<&'g dyn Computable<N>>,
 {
 }
@@ -62,15 +62,15 @@ where
 impl<'g, F, N, M> Compute<N> for Cn<'g, F, N, M>
 where
     F: Recursive<M> + Compute<M>,
-    N: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize>,
-    M: ArrayLength<&'g dyn Computable<N>> + ArrayLength<usize> + ArrayLength<Option<usize>>,
+    N: ArrayLength<usize>,
+    M: ArrayLength<usize> + ArrayLength<&'g dyn Computable<N>>,
 {
-    fn call(&self, x: GenericArray<usize, N>) -> Option<usize> {
-        (&self.gs)
-            .into_iter()
-            .map(|g| g.call(x.clone()))
-            .collect::<Option<Vec<usize>>>()
-            .and_then(|x| self.f.call(GenericArray::clone_from_slice(&x)))
+    fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
+        self.gs
+            .iter()
+            .map(|g| g.call(x))
+            .collect::<Option<Vec<_>>>()
+            .and_then(|x| self.f.call(GenericArray::from_slice(&x)))
     }
 }
 
@@ -137,16 +137,21 @@ where
     F: Recursive<Sub1<N>> + Compute<Sub1<N>>,
     G: Recursive<Add1<N>> + Compute<Add1<N>>,
     N: ArrayLength<usize> + Sub<B1> + Add<B1>,
-    Add1<N>: Unsigned + ArrayLength<usize>,
-    Sub1<N>: Unsigned + ArrayLength<usize> + Add<B1, Output = N> + Add<U2, Output = Add1<N>>,
+    Add1<N>: ArrayLength<usize>,
+    Sub1<N>: ArrayLength<usize> + Add<B1, Output = N> + Add<U2, Output = Add1<N>>,
     Sum<Sub1<N>, U2>: ArrayLength<usize>,
 {
-    fn call(&self, x: GenericArray<usize, N>) -> Option<usize> {
-        let (x, y) = x.pop_back();
-        let mut output = self.f.call(x.clone());
+    fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
+        let (x, y) = x.clone().pop_back();
+        let mut output = self.f.call(&x);
+        let mut input = x.concat(*args![0, 0]);
         for y in 0..y {
             match output {
-                Some(out) => output = self.g.call(x.clone().concat(args![y, out])),
+                Some(out) => {
+                    input[N::USIZE - 1] = y;
+                    input[N::USIZE] = out;
+                    output = self.g.call(&input);
+                }
                 None => return None,
             }
         }
@@ -195,9 +200,11 @@ where
     Add1<N>: ArrayLength<usize> + Sub<B1, Output = N>,
     Sub1<Add1<N>>: ArrayLength<usize>,
 {
-    fn call(&self, x: GenericArray<usize, N>) -> Option<usize> {
+    fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
+        let mut input = x.clone().append(0);
         for y in 0.. {
-            match self.f.call(x.clone().append(y)) {
+            input[N::USIZE] = y;
+            match self.f.call(&input) {
                 None => return None,
                 Some(0) => return Some(y),
                 Some(_) => continue,

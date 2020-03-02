@@ -1,5 +1,3 @@
-#![feature(impl_trait_in_bindings)]
-
 pub mod compute;
 pub mod funcs;
 pub mod recursive;
@@ -17,7 +15,7 @@ macro_rules! funcs {
 #[macro_export]
 macro_rules! args {
     ($($x:expr),*) => {
-        generic_array::arr![usize; $($x,)*]
+        &generic_array::arr![usize; $($x,)*]
     }
 }
 
