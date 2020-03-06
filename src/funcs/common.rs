@@ -51,6 +51,7 @@ pub fn difference() -> impl Computable<U2> {
 //     cn![difference(); U1; cn![S; U1; Z], id![U1, U1]]
 // }
 // Stopgap solution:
+#[derive(Debug)]
 pub struct Antisignum {}
 pub const antisignum: Antisignum = Antisignum {};
 impl Recursive<U1> for Antisignum {}
@@ -65,6 +66,7 @@ impl crate::compute::Compute<U1> for Antisignum {
 //     cn![difference(); U1; cn![S; U1; Z], antisignum]
 // }
 // Stopgap solution:
+#[derive(Debug)]
 pub struct Signum {}
 pub const signum: Signum = Signum {};
 impl Recursive<U1> for Signum {}

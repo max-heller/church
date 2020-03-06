@@ -2,9 +2,11 @@ use crate::recursive::{PrimitiveRecursive, Recursive};
 use std::{marker::PhantomData, ops::Sub};
 use typenum::{consts::U1, Diff, NonZero, Unsigned};
 
+#[derive(Debug)]
 pub struct Zero {}
 pub const Z: Zero = Zero {};
 
+#[derive(Debug)]
 pub struct Succ {}
 pub const S: Succ = Succ {};
 
@@ -15,6 +17,16 @@ where
 {
     n: PhantomData<N>,
     k: PhantomData<K>,
+}
+
+impl<N, K> std::fmt::Debug for Id<N, K>
+where
+    N: Unsigned + NonZero,
+    K: Unsigned + NonZero,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Id<{}, {}>", N::USIZE, K::USIZE)
+    }
 }
 
 impl<N, K> Id<N, K>

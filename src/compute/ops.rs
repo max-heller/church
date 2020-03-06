@@ -23,6 +23,17 @@ where
     gs: GenericArray<&'g dyn Computable<N>, M>,
 }
 
+impl<'g, F, N, M> std::fmt::Debug for Cn<'g, F, N, M>
+where
+    F: Recursive<M>,
+    N: Unsigned,
+    M: ArrayLength<&'g dyn Computable<N>>,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Cn[{:?}, {:?}]", self.f, self.gs)
+    }
+}
+
 impl<'g, F, N, M> Cn<'g, F, N, M>
 where
     F: Recursive<M>,
@@ -85,6 +96,19 @@ where
     f: F,
     g: G,
     n: PhantomData<N>,
+}
+
+impl<F, G, N> std::fmt::Debug for Pr<F, G, N>
+where
+    F: Recursive<Sub1<N>>,
+    G: Recursive<Add1<N>>,
+    N: Unsigned + Sub<B1> + Add<B1>,
+    Sub1<N>: Unsigned,
+    Add1<N>: Unsigned,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Pr[{:?}, {:?}]", self.f, self.g)
+    }
 }
 
 impl<F, G, N, M> Pr<F, G, N>
@@ -166,6 +190,16 @@ where
 {
     f: F,
     n: PhantomData<N>,
+}
+
+impl<F, N> std::fmt::Debug for Mn<F, N>
+where
+    F: Recursive<N>,
+    N: Unsigned,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Mn[{:?}]", self.f)
+    }
 }
 
 impl<F, N> Mn<F, N>
