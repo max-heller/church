@@ -52,8 +52,8 @@ pub fn difference() -> impl Computable<U2> {
 // }
 // Stopgap solution:
 #[derive(Debug)]
-pub struct Antisignum {}
-pub const antisignum: Antisignum = Antisignum {};
+pub struct Antisignum;
+pub const antisignum: Antisignum = Antisignum;
 impl Recursive<U1> for Antisignum {}
 impl crate::compute::Compute<U1> for Antisignum {
     fn call(&self, x: &generic_array::GenericArray<usize, U1>) -> Option<usize> {
@@ -67,8 +67,8 @@ impl crate::compute::Compute<U1> for Antisignum {
 // }
 // Stopgap solution:
 #[derive(Debug)]
-pub struct Signum {}
-pub const signum: Signum = Signum {};
+pub struct Signum;
+pub const signum: Signum = Signum;
 impl Recursive<U1> for Signum {}
 impl crate::compute::Compute<U1> for Signum {
     fn call(&self, x: &generic_array::GenericArray<usize, U1>) -> Option<usize> {

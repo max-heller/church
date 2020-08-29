@@ -3,12 +3,12 @@ use std::{marker::PhantomData, ops::Sub};
 use typenum::{consts::U1, Diff, NonZero, Unsigned};
 
 #[derive(Debug)]
-pub struct Zero {}
-pub const Z: Zero = Zero {};
+pub struct Zero;
+pub const Z: Zero = Zero;
 
 #[derive(Debug)]
-pub struct Succ {}
-pub const S: Succ = Succ {};
+pub struct Succ;
+pub const S: Succ = Succ;
 
 pub struct Id<N, K>
 where
