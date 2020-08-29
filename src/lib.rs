@@ -8,7 +8,7 @@ pub use recursive::*;
 #[macro_export]
 macro_rules! funcs {
     ($N:ty; $($g:expr),*) => {
-        generic_array::arr![&'_ dyn crate::compute::Computable<$N>; $($g,)*]
+        generic_array::arr![Box<dyn crate::compute::Computable<$N>>; $(Box::new($g),)*]
     }
 }
 
