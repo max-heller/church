@@ -13,34 +13,34 @@ use std::{
 };
 use typenum::{bit::B1, consts::*, Add1, Sub1, Sum, Unsigned};
 
-pub struct Cn<'g, F, N, M>
+pub struct Cn<F, N, M>
 where
     F: Recursive<M>,
     N: Unsigned,
-    M: ArrayLength<&'g dyn Computable<N>>,
+    M: ArrayLength<Box<dyn Computable<N>>>,
 {
     f: F,
-    gs: GenericArray<&'g dyn Computable<N>, M>,
+    gs: GenericArray<Box<dyn Computable<N>>, M>,
 }
 
-impl<'g, F, N, M> std::fmt::Debug for Cn<'g, F, N, M>
+impl<F, N, M> std::fmt::Debug for Cn<F, N, M>
 where
     F: Recursive<M>,
     N: Unsigned,
-    M: ArrayLength<&'g dyn Computable<N>>,
+    M: ArrayLength<Box<dyn Computable<N>>>,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Cn[{:?}, {:?}]", self.f, self.gs)
     }
 }
 
-impl<'g, F, N, M> Cn<'g, F, N, M>
+impl<F, N, M> Cn<F, N, M>
 where
     F: Recursive<M>,
     N: Unsigned,
-    M: ArrayLength<&'g dyn Computable<N>>,
+    M: ArrayLength<Box<dyn Computable<N>>>,
 {
-    pub fn new(f: F, gs: GenericArray<&'g dyn Computable<N>, M>) -> Self {
+    pub fn new(f: F, gs: GenericArray<Box<dyn Computable<N>>, M>) -> Self {
         Cn { f, gs }
     }
 }
@@ -48,7 +48,7 @@ where
 #[macro_export]
 macro_rules! cn {
     ($f:expr; $N:ty; $($g:expr),*) => {
-        Cn::new($f, funcs![$N; $(&$g),*])
+        Cn::new($f, funcs![$N; $($g),*])
     }
 }
 
@@ -62,19 +62,19 @@ macro_rules! cn {
 // {
 // }
 
-impl<'g, F, N, M> Recursive<N> for Cn<'g, F, N, M>
+impl<F, N, M> Recursive<N> for Cn<F, N, M>
 where
     F: Recursive<M>,
     N: Unsigned,
-    M: ArrayLength<&'g dyn Computable<N>>,
+    M: ArrayLength<Box<dyn Computable<N>>>,
 {
 }
 
-impl<'g, F, N, M> Compute<N> for Cn<'g, F, N, M>
+impl<F, N, M> Compute<N> for Cn<F, N, M>
 where
     F: Recursive<M> + Compute<M>,
     N: ArrayLength<usize>,
-    M: ArrayLength<usize> + ArrayLength<&'g dyn Computable<N>>,
+    M: ArrayLength<usize> + ArrayLength<Box<dyn Computable<N>>>,
 {
     fn call(&self, x: &GenericArray<usize, N>) -> Option<usize> {
         self.gs
