@@ -38,12 +38,7 @@ impl<F: Compute<M>, const N: Unsigned, const M: Unsigned, const PRIMITIVE: bool>
     for Cn<F, N, M, PRIMITIVE>
 {
     fn call(&self, x: &[usize; N]) -> Option<usize> {
-        self.gs
-            .iter()
-            .map(|g| g.call(x))
-            .collect::<Option<Vec<_>>>()
-            .and_then(|x| <[usize; M]>::try_from(x).ok())
-            .and_then(|x| self.f.call(&x))
+        std::array::try_from_fn(|i| self.gs[i].call(x)).and_then(|x| self.f.call(&x))
     }
 }
 
