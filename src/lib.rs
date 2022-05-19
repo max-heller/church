@@ -1,3 +1,7 @@
+#![feature(generic_const_exprs)]
+#![feature(trait_alias)]
+#![feature(generic_arg_infer)]
+
 pub mod compute;
 pub mod funcs;
 pub mod recursive;
@@ -5,17 +9,16 @@ pub mod recursive;
 pub use funcs::*;
 pub use recursive::*;
 
-#[macro_export]
-macro_rules! funcs {
-    ($N:ty; $($g:expr),*) => {
-        generic_array::arr![Box<dyn crate::compute::Computable<$N>>; $(Box::new($g),)*]
-    }
-}
+pub type Unsigned = usize;
+
+pub(crate) struct Assert<const X: bool>;
+pub(crate) trait True {}
+impl True for Assert<true> {}
 
 #[macro_export]
-macro_rules! args {
-    ($($x:expr),*) => {
-        &generic_array::arr![usize; $($x,)*]
+macro_rules! funcs {
+    ($($g:expr),*) => {
+        [$(Box::new($g),)*]
     }
 }
 

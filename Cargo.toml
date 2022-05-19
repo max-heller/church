@@ -1,8 +1,8 @@
 [package]
 name = "church"
-version = "0.1.0"
-authors = ["mxheller <heller.max1@gmail.com>"]
-edition = "2018"
+version = "0.2.0"
+authors = ["max-heller <max.a.heller@gmail.com>"]
+edition = "2021"
 
 [lib]
 name = "church"
@@ -10,10 +10,6 @@ path = "src/lib.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-"generic-array" = "^0.14"
-"typenum" = "^1.11"
-
 [dev-dependencies]
-"quickcheck" = "^0.9"
-"quickcheck_macros" = "^0.9"
+"quickcheck" = "1.0.3"
+"quickcheck_macros" = "1.0.0"

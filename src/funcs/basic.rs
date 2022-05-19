@@ -1,6 +1,4 @@
-use crate::recursive::{PrimitiveRecursive, Recursive};
-use std::{marker::PhantomData, ops::Sub};
-use typenum::{consts::U1, Diff, NonZero, Unsigned};
+use crate::{recursive::Recursive, Unsigned};
 
 #[derive(Debug)]
 pub struct Zero;
@@ -10,60 +8,21 @@ pub const Z: Zero = Zero;
 pub struct Succ;
 pub const S: Succ = Succ;
 
-pub struct Id<N, K>
-where
-    N: Unsigned + NonZero,
-    K: Unsigned + NonZero,
-{
-    n: PhantomData<N>,
-    k: PhantomData<K>,
-}
+pub struct Id<const N: Unsigned, const K: Unsigned>;
 
-impl<N, K> std::fmt::Debug for Id<N, K>
-where
-    N: Unsigned + NonZero,
-    K: Unsigned + NonZero,
-{
+impl<const N: Unsigned, const K: Unsigned> std::fmt::Debug for Id<N, K> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Id<{}, {}>", N::USIZE, K::USIZE)
-    }
-}
-
-impl<N, K> Id<N, K>
-where
-    N: Unsigned + NonZero + Sub<K>,
-    K: Unsigned + NonZero,
-    Diff<N, K>: Unsigned,
-{
-    pub fn new() -> Self {
-        Id {
-            n: PhantomData,
-            k: PhantomData,
-        }
+        write!(f, "Id<{}, {}>", N, K)
     }
 }
 
 #[macro_export]
 macro_rules! id {
-    ($N:ty, $K:ty) => {
-        Id::<$N, $K>::new()
+    ($N:expr, $K:expr) => {
+        Id::<$N, $K>
     };
 }
 
-impl PrimitiveRecursive<U1> for Zero {}
-impl PrimitiveRecursive<U1> for Succ {}
-impl<N, K> PrimitiveRecursive<N> for Id<N, K>
-where
-    N: Unsigned + NonZero,
-    K: Unsigned + NonZero,
-{
-}
-impl Recursive<U1> for Zero {}
-impl Recursive<U1> for Succ {}
-
-impl<N, K> Recursive<N> for Id<N, K>
-where
-    N: Unsigned + NonZero,
-    K: Unsigned + NonZero,
-{
-}
+impl Recursive<1, true> for Zero {}
+impl Recursive<1, true> for Succ {}
+impl<const N: Unsigned, const K: Unsigned> Recursive<N, true> for Id<N, K> {}
