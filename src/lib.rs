@@ -1,5 +1,4 @@
 #![feature(generic_const_exprs)]
-#![feature(trait_alias)]
 #![feature(generic_arg_infer)]
 #![feature(array_from_fn)]
 
