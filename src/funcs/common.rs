@@ -6,7 +6,7 @@ pub fn const_n(n: usize) -> impl Computable<1> {
     for _ in 0..n {
         f = cn![
             id![1, 1];
-            cn![S; const_n(n - 1)]
+            cn![S; f]
         ];
     }
     f
@@ -58,19 +58,21 @@ mod test {
     use crate::{compute::Compute, defined_eq};
     use quickcheck_macros::quickcheck;
 
-    // TODO: takes far too long, likely due to constructing function each time?
-    // #[quickcheck]
-    // fn const_n_is_n(n: usize, x: usize) -> bool {
-    //     Some(n) == const_n(n).call(&[x])
-    // }
+    #[quickcheck]
+    fn const_n_is_n(n: u8, x: u8) -> bool {
+        let (n, x) = (n as usize, x as usize);
+        Some(n) == const_n(n).call(&[x])
+    }
 
     #[quickcheck]
-    fn sum_is_sum(a: usize, b: usize) -> bool {
+    fn sum_is_sum(a: u8, b: u8) -> bool {
+        let (a, b) = (a as usize, b as usize);
         Some(a + b) == sum().call(&[a, b])
     }
 
     #[quickcheck]
-    fn product_is_product(a: usize, b: usize) -> bool {
+    fn product_is_product(a: u8, b: u8) -> bool {
+        let (a, b) = (a as usize, b as usize);
         Some(a * b) == product().call(&[a, b])
     }
 
@@ -81,22 +83,26 @@ mod test {
     }
 
     #[quickcheck]
-    fn predecessor_is_predecessor(x: usize) -> bool {
+    fn predecessor_is_predecessor(x: u8) -> bool {
+        let x = x as usize;
         Some(x.saturating_sub(1)) == predecessor().call(&[x])
     }
 
     #[quickcheck]
-    fn difference_is_difference(x: usize, y: usize) -> bool {
+    fn difference_is_difference(x: u8, y: u8) -> bool {
+        let (x, y) = (x as usize, y as usize);
         Some(x.saturating_sub(y)) == difference().call(&[x, y])
     }
 
     #[quickcheck]
-    fn antisignum_is_antisignum(x: usize) -> bool {
+    fn antisignum_is_antisignum(x: u8) -> bool {
+        let x = x as usize;
         Some(1usize.saturating_sub(x)) == antisignum().call(&[x])
     }
 
     #[quickcheck]
-    fn signum_is_signum(x: usize) -> bool {
+    fn signum_is_signum(x: u8) -> bool {
+        let x = x as usize;
         Some(1usize.saturating_sub(1usize.saturating_sub(x))) == signum().call(&[x])
     }
 }

@@ -34,6 +34,6 @@ impl Compute<1> for Succ {
 
 impl<const N: Unsigned, const K: Unsigned> Compute<N> for Id<N, K> {
     fn call(&self, x: &[usize; N]) -> Option<usize> {
-        Some(x[K as usize - 1])
+        Some(x[K - 1])
     }
 }
