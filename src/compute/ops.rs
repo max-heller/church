@@ -1,5 +1,5 @@
 use super::Compute;
-use crate::{recursive::Recursive, Assert, Cons, Nil, Primitive, True, Unsigned};
+use crate::{recursive::Recursive, Cons, Nil, Primitive};
 
 pub struct Cn<F, GS> {
     f: F,
@@ -77,7 +77,7 @@ where
     }
 }
 
-impl<const N: Unsigned, const M: Unsigned, F, H, T> Compute<N> for Cn<F, Cons<H, T, M>>
+impl<const N: usize, const M: usize, F, H, T> Compute<N> for Cn<F, Cons<H, T, M>>
 where
     F: Compute<M>,
     Cons<H, T, M>: HComputable<N, M>,
@@ -144,9 +144,8 @@ fn array_split_last<T, const N: usize>(arr: &[T; N]) -> Option<(&T, &[T; N - 1])
     Some((last, rest.try_into().unwrap()))
 }
 
-impl<F, G, const N: Unsigned> Compute<N> for Pr<F, G>
+impl<F, G, const N: usize> Compute<N> for Pr<F, G>
 where
-    Assert<{ N > 0 }>: True,
     F: Compute<{ N - 1 }>,
     G: Compute<{ N - 1 + 2 }>,
 {
@@ -196,7 +195,7 @@ macro_rules! mn {
 
 impl<F> Recursive for Mn<F> {}
 
-impl<F, const N: Unsigned> Compute<N> for Mn<F>
+impl<F, const N: usize> Compute<N> for Mn<F>
 where
     F: Compute<{ N + 1 }>,
 {

@@ -1,4 +1,4 @@
-use crate::{recursive::Recursive, Primitive, Unsigned};
+use crate::{recursive::Recursive, Primitive};
 
 #[derive(Debug)]
 pub struct Zero;
@@ -8,9 +8,9 @@ pub const Z: Zero = Zero;
 pub struct Succ;
 pub const S: Succ = Succ;
 
-pub struct Id<const K: Unsigned>;
+pub struct Id<const K: usize>;
 
-impl<const K: Unsigned> std::fmt::Debug for Id<K> {
+impl<const K: usize> std::fmt::Debug for Id<K> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Id<{}>", K)
     }
@@ -27,5 +27,5 @@ impl Recursive for Zero {}
 impl Primitive for Zero {}
 impl Recursive for Succ {}
 impl Primitive for Succ {}
-impl<const K: Unsigned> Recursive for Id<K> {}
-impl<const K: Unsigned> Primitive for Id<K> {}
+impl<const K: usize> Recursive for Id<K> {}
+impl<const K: usize> Primitive for Id<K> {}

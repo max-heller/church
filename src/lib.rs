@@ -7,12 +7,6 @@ pub mod recursive;
 pub use funcs::*;
 pub use recursive::*;
 
-pub type Unsigned = usize;
-
-pub(crate) struct Assert<const X: bool>;
-pub(crate) trait True {}
-impl True for Assert<true> {}
-
 #[macro_export]
 macro_rules! defined_eq {
     ($actual:expr, $expected:expr) => {
