@@ -51,7 +51,7 @@ where
     T: HComputable<N, { M - 1 }>,
 {
     fn compute(&self, x: &[usize; N], out: &mut [usize; M]) -> Option<()> {
-        let (first, rest) = array_split_first_mut(out)?;
+        let (first, rest) = array_split_first_mut(out);
         *first = self.head().call(x)?;
         self.tail().compute(x, rest)
     }
@@ -101,14 +101,19 @@ fn concat<T: Copy + Default, const A: usize, const B: usize>(a: &[T; A], b: &[T;
     whole
 }
 
-fn array_split_first_mut<T, const N: usize>(arr: &mut [T; N]) -> Option<(&mut T, &mut [T; N - 1])> {
-    let (first, rest) = arr.split_first_mut()?;
-    Some((first, rest.try_into().unwrap()))
+#[inline]
+fn array_split_first_mut<T, const N: usize>(arr: &mut [T; N]) -> (&mut T, &mut [T; N - 1]) {
+    match arr.as_mut_slice() {
+        [first, rest @ ..] => (first, rest.try_into().unwrap()),
+        _ => unreachable!(),
+    }
 }
 
-fn array_split_last<T, const N: usize>(arr: &[T; N]) -> Option<(&T, &[T; N - 1])> {
-    let (last, rest) = arr.split_last()?;
-    Some((last, rest.try_into().unwrap()))
+fn array_split_last<T, const N: usize>(arr: &[T; N]) -> (&T, &[T; N - 1]) {
+    match arr.as_slice() {
+        [rest @ .., last] => (last, rest.try_into().unwrap()),
+        _ => unreachable!(),
+    }
 }
 
 impl<F, G, const N: usize> Compute<N> for Pr<F, G>
@@ -117,7 +122,7 @@ where
     G: Compute<{ N - 1 + 2 }>,
 {
     fn call(&self, x: &[usize; N]) -> Option<usize> {
-        let (y, x) = array_split_last(x).unwrap();
+        let (y, x) = array_split_last(x);
         let mut output = self.f.call(x);
         let mut input = concat(x, &[0, 0]);
         for y in 0..*y {
