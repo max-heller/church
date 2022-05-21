@@ -89,12 +89,12 @@ where
     }
 }
 
-pub struct Pr<F, G, const PRIMITIVE: bool> {
+pub struct Pr<F, G> {
     f: F,
     g: G,
 }
 
-impl<F, G, const PRIMITIVE: bool> std::fmt::Debug for Pr<F, G, PRIMITIVE>
+impl<F, G> std::fmt::Debug for Pr<F, G>
 where
     F: std::fmt::Debug,
     G: std::fmt::Debug,
@@ -104,7 +104,7 @@ where
     }
 }
 
-impl<F, G, const PRIMITIVE: bool> Pr<F, G, PRIMITIVE> {
+impl<F, G> Pr<F, G> {
     pub fn new(f: F, g: G) -> Self {
         Pr { f, g }
     }
@@ -113,12 +113,22 @@ impl<F, G, const PRIMITIVE: bool> Pr<F, G, PRIMITIVE> {
 #[macro_export]
 macro_rules! pr {
     ($f:expr, $g:expr) => {
-        Pr::<_, _, true>::new($f, $g)
+        Pr::new($f, $g)
     };
 }
 
-impl<F, G> Primitive for Pr<F, G, true> {}
-impl<F, G, const PRIMITIVE: bool> Recursive for Pr<F, G, PRIMITIVE> {}
+impl<F, G> Primitive for Pr<F, G>
+where
+    F: Primitive,
+    G: Primitive,
+{
+}
+impl<F, G> Recursive for Pr<F, G>
+where
+    F: Recursive,
+    G: Recursive,
+{
+}
 
 // https://stackoverflow.com/a/67085709
 fn concat<T: Copy + Default, const A: usize, const B: usize>(a: &[T; A], b: &[T; B]) -> [T; A + B] {
@@ -134,7 +144,7 @@ fn array_split_last<T, const N: usize>(arr: &[T; N]) -> Option<(&T, &[T; N - 1])
     Some((last, rest.try_into().unwrap()))
 }
 
-impl<F, G, const N: Unsigned, const PRIMITIVE: bool> Compute<N> for Pr<F, G, PRIMITIVE>
+impl<F, G, const N: Unsigned> Compute<N> for Pr<F, G>
 where
     Assert<{ N > 0 }>: True,
     F: Compute<{ N - 1 }>,
@@ -235,7 +245,7 @@ fn test_pr() {
     use crate::*;
 
     // pr = Pr[z, id^3_3]
-    type T = Pr<Zero, Id<3, 3>, true>;
+    type T = Pr<Zero, Id<3, 3>>;
     let f: T = pr![Z, id![3, 3]];
     defined_eq!(f.call(&[1, 0]), 0);
     defined_eq!(f.call(&[5, 0]), 0);
