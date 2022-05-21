@@ -3,6 +3,7 @@ use crate::{
     Compute, PrimitiveRecursive, Recursive,
 };
 
+#[derive(Default)]
 pub struct Cn<F, GS> {
     f: F,
     gs: GS,
@@ -69,6 +70,7 @@ where
     }
 }
 
+#[derive(Default)]
 pub struct Pr<F, G> {
     f: F,
     g: G,
@@ -134,6 +136,7 @@ where
     }
 }
 
+#[derive(Default)]
 pub struct Mn<F> {
     f: F,
 }

@@ -1,13 +1,14 @@
 use crate::{recursive::Recursive, PrimitiveRecursive};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Zero;
 pub const Z: Zero = Zero;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Succ;
 pub const S: Succ = Succ;
 
+#[derive(Default)]
 pub struct Id<const K: usize>;
 
 impl<const K: usize> std::fmt::Debug for Id<K> {

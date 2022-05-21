@@ -57,6 +57,12 @@ mod test {
     use super::*;
     use quickcheck_macros::quickcheck;
 
+    #[test]
+    fn value_synthesis() {
+        let _: Sum = Sum::default();
+        let _: Product = Product::default();
+    }
+
     #[quickcheck]
     fn const_n_is_n(n: u8, x: u8) -> bool {
         let (n, x) = (n as usize, x as usize);
@@ -66,7 +72,7 @@ mod test {
     #[quickcheck]
     fn sum_is_sum(a: u8, b: u8) -> bool {
         let (a, b) = (a as usize, b as usize);
-        Some(a + b) == SUM.call(&[a, b])
+        Some(a + b) == SUM.call(&[a, b]) && Some(a + b) == Sum::default().call(&[a, b])
     }
 
     #[quickcheck]

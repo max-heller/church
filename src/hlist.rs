@@ -1,5 +1,7 @@
+#[derive(Default)]
 pub struct Nil;
 
+#[derive(Default)]
 pub struct Cons<H, T, const LEN: usize> {
     head: H,
     tail: T,
