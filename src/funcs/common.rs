@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{hlist::*, *};
 
 pub fn const_n(n: usize) -> impl Compute<1> {
     let mut f: Box<dyn Compute<1>> = Box::new(cn![id![1]; Z]);
@@ -8,23 +8,27 @@ pub fn const_n(n: usize) -> impl Compute<1> {
     f
 }
 
-pub fn sum() -> impl Compute<2> {
-    pr(id![1], cn![S; id![3]])
-}
+pub type Sum = Pr<Id<1>, Cn<Succ, Cons<Id<3>, Nil, 1>>>;
 
-pub fn product() -> impl Compute<2> {
-    pr(Z, cn![sum(); id![1], id![3]])
-}
+pub const SUM: Sum = pr(id![1], cn![S; id![3]]);
 
-pub fn power() -> impl Compute<2> {
-    pr(cn![S; Z], cn![product(); id![1], id![3]])
-}
+pub type Product = Pr<Zero, Cn<Sum, Cons<Id<1>, Cons<Id<3>, Nil, 1>, 2>>>;
 
-pub fn superpower() -> impl Compute<2> {
-    pr(cn![S; Z], cn![power(); id![1], id![3]])
-}
+pub const PRODUCT: Product = pr(Z, cn![SUM; id![1], id![3]]);
 
-fn one_place_recursive_func<F, G>(f: F, g: G) -> impl Compute<1>
+pub type Power = Pr<Cn<Succ, Cons<Zero, Nil, 1>>, Cn<Product, Cons<Id<1>, Cons<Id<3>, Nil, 1>, 2>>>;
+
+pub const POWER: Power = pr(cn![S; Z], cn![PRODUCT; id![1], id![3]]);
+
+pub type Superpower =
+    Pr<Cn<Succ, Cons<Zero, Nil, 1>>, Cn<Power, Cons<Id<1>, Cons<Id<3>, Nil, 1>, 2>>>;
+
+pub const SUPERPOWER: Superpower = pr(cn![S; Z], cn![POWER; id![1], id![3]]);
+
+const fn one_place_recursive_func<F, G>(
+    f: F,
+    g: G,
+) -> Cn<Pr<F, G>, Cons<Id<1>, Cons<Id<1>, Nil, 1>, 2>>
 where
     F: Compute<1>,
     G: Compute<3>,
@@ -32,21 +36,21 @@ where
     cn![pr(f, g); id![1], id![1]]
 }
 
-pub fn predecessor() -> impl Compute<1> {
-    one_place_recursive_func(Z, id![2])
-}
+pub type Predecessor = Cn<Pr<Zero, Id<2>>, Cons<Id<1>, Cons<Id<1>, Nil, 1>, 2>>;
 
-pub fn difference() -> impl Compute<2> {
-    pr(id![1], cn![predecessor(); id![3]])
-}
+pub const PREDECESSOR: Predecessor = one_place_recursive_func(Z, id![2]);
 
-pub fn antisignum() -> impl Compute<1> {
-    cn![difference(); cn![S; Z], id![1]]
-}
+pub type Difference = Pr<Id<1>, Cn<Predecessor, Cons<Id<3>, Nil, 1>>>;
 
-pub fn signum() -> impl Compute<1> {
-    cn![difference(); cn![S; Z], antisignum()]
-}
+pub const DIFFERENCE: Difference = pr(id![1], cn![PREDECESSOR; id![3]]);
+
+pub type Antisignum = Cn<Difference, Cons<Cn<Succ, Cons<Zero, Nil, 1>>, Cons<Id<1>, Nil, 1>, 2>>;
+
+pub const ANTISIGNUM: Antisignum = cn![DIFFERENCE; cn![S; Z], id![1]];
+
+pub type Signum = Cn<Difference, Cons<Cn<Succ, Cons<Zero, Nil, 1>>, Cons<Antisignum, Nil, 1>, 2>>;
+
+pub const SIGNUM: Signum = cn![DIFFERENCE; cn![S; Z], ANTISIGNUM];
 
 #[cfg(test)]
 mod test {
@@ -62,42 +66,41 @@ mod test {
     #[quickcheck]
     fn sum_is_sum(a: u8, b: u8) -> bool {
         let (a, b) = (a as usize, b as usize);
-        Some(a + b) == sum().call(&[a, b])
+        Some(a + b) == SUM.call(&[a, b])
     }
 
     #[quickcheck]
     fn product_is_product(a: u8, b: u8) -> bool {
         let (a, b) = (a as usize, b as usize);
-        Some(a * b) == product().call(&[a, b])
+        Some(a * b) == PRODUCT.call(&[a, b])
     }
 
     #[test]
     fn test_power() {
-        let pow = power();
-        defined_eq!(pow.call(&[2, 3]), 8);
+        defined_eq!(POWER.call(&[2, 3]), 8);
     }
 
     #[quickcheck]
     fn predecessor_is_predecessor(x: u8) -> bool {
         let x = x as usize;
-        Some(x.saturating_sub(1)) == predecessor().call(&[x])
+        Some(x.saturating_sub(1)) == PREDECESSOR.call(&[x])
     }
 
     #[quickcheck]
     fn difference_is_difference(x: u8, y: u8) -> bool {
         let (x, y) = (x as usize, y as usize);
-        Some(x.saturating_sub(y)) == difference().call(&[x, y])
+        Some(x.saturating_sub(y)) == DIFFERENCE.call(&[x, y])
     }
 
     #[quickcheck]
     fn antisignum_is_antisignum(x: u8) -> bool {
         let x = x as usize;
-        Some(1usize.saturating_sub(x)) == antisignum().call(&[x])
+        Some(1usize.saturating_sub(x)) == ANTISIGNUM.call(&[x])
     }
 
     #[quickcheck]
     fn signum_is_signum(x: u8) -> bool {
         let x = x as usize;
-        Some(1usize.saturating_sub(1usize.saturating_sub(x))) == signum().call(&[x])
+        Some(1usize.saturating_sub(1usize.saturating_sub(x))) == SIGNUM.call(&[x])
     }
 }

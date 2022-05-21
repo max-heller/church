@@ -9,7 +9,7 @@ pub struct Cn<F, GS> {
 }
 
 impl<F, GS> Cn<F, GS> {
-    pub fn new(f: F, gs: GS) -> Self {
+    pub const fn new(f: F, gs: GS) -> Self {
         Cn { f, gs }
     }
 }
@@ -74,7 +74,7 @@ pub struct Pr<F, G> {
     g: G,
 }
 
-pub fn pr<F, G>(f: F, g: G) -> Pr<F, G> {
+pub const fn pr<F, G>(f: F, g: G) -> Pr<F, G> {
     Pr { f, g }
 }
 
@@ -138,7 +138,7 @@ pub struct Mn<F> {
     f: F,
 }
 
-pub fn mn<F>(f: F) -> Mn<F> {
+pub const fn mn<F>(f: F) -> Mn<F> {
     Mn { f }
 }
 

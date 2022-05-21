@@ -6,7 +6,7 @@ pub struct Cons<H, T, const LEN: usize> {
 }
 
 #[doc(hidden)]
-pub fn cons<H, T, const LEN: usize>(head: H, tail: T) -> Cons<H, T, { LEN + 1 }>
+pub const fn cons<H, T, const LEN: usize>(head: H, tail: T) -> Cons<H, T, { LEN + 1 }>
 where
     T: Length<LEN>,
 {
