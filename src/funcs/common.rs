@@ -1,54 +1,51 @@
 use super::basic::*;
-use crate::{compute::ops::*, compute::Computable, *};
+use crate::{compute::ops::*, compute::Compute, *};
 
-pub fn const_n(n: usize) -> impl Computable<1> {
-    let mut f = cn![id![1, 1]; Z];
+pub fn const_n(n: usize) -> impl Compute<1> {
+    let mut f: Box<dyn Compute<1>> = Box::new(cn![id![1, 1]; Z]);
     for _ in 0..n {
-        f = cn![
-            id![1, 1];
-            cn![S; f]
-        ];
+        f = Box::new(cn![S; f]);
     }
     f
 }
 
-pub fn sum() -> impl Computable<2> {
+pub fn sum() -> impl Compute<2> {
     pr![id![1, 1], cn![S; id![3, 3]]]
 }
 
-pub fn product() -> impl Computable<2> {
+pub fn product() -> impl Compute<2> {
     pr![Z, cn![sum(); id![3, 1], id![3, 3]]]
 }
 
-pub fn power() -> impl Computable<2> {
+pub fn power() -> impl Compute<2> {
     pr![cn![S; Z], cn![product(); id![3, 1], id![3, 3]]]
 }
 
-pub fn superpower() -> impl Computable<2> {
+pub fn superpower() -> impl Compute<2> {
     pr![cn![S; Z], cn![power(); id![3, 1], id![3, 3]]]
 }
 
-fn one_place_recursive_func<F, G>(f: F, g: G) -> impl Computable<1>
+fn one_place_recursive_func<F, G>(f: F, g: G) -> impl Compute<1>
 where
-    F: Computable<1>,
-    G: Computable<3>,
+    F: Compute<1>,
+    G: Compute<3>,
 {
     cn![pr![f, g]; id![1, 1], id![1, 1]]
 }
 
-pub fn predecessor() -> impl Computable<1> {
+pub fn predecessor() -> impl Compute<1> {
     one_place_recursive_func(Z, id![3, 2])
 }
 
-pub fn difference() -> impl Computable<2> {
+pub fn difference() -> impl Compute<2> {
     pr!(id![1, 1], cn![predecessor(); id![3, 3]])
 }
 
-pub fn antisignum() -> impl Computable<1> {
+pub fn antisignum() -> impl Compute<1> {
     cn![difference(); cn![S; Z], id![1, 1]]
 }
 
-pub fn signum() -> impl Computable<1> {
+pub fn signum() -> impl Compute<1> {
     cn![difference(); cn![S; Z], antisignum()]
 }
 

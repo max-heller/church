@@ -1,5 +1,5 @@
-use super::{Computable, Compute};
-use crate::{recursive::Recursive, Unsigned};
+use super::Compute;
+use crate::{recursive::Recursive, Assert, Cons, Nil, Primitive, True, Unsigned};
 
 pub struct Cn<F, GS> {
     f: F,
@@ -22,23 +22,70 @@ impl<F, GS> Cn<F, GS> {
     }
 }
 
+#[doc(hidden)]
+#[macro_export]
+macro_rules! count {
+    () => (0usize);
+    ( $x:tt $($xs:tt)* ) => (1usize + count!($($xs)*));
+}
+
 #[macro_export]
 macro_rules! cn {
-    ($f:expr; $($g:expr),*) => {
-        Cn::<_, [Box<dyn Computable<_, true>>; _]>::new($f, funcs![$($g),*])
+    ($f:expr; $($g:expr),*) => {{
+        // const M: usize = $crate::count!($($g)*);
+        Cn::new($f, $crate::funcs![$($g),*])
+    }}
+}
+
+impl<F, GS> Recursive for Cn<F, GS>
+where
+    F: Recursive,
+    GS: Recursive,
+{
+}
+impl<F, GS> Primitive for Cn<F, GS>
+where
+    F: Primitive,
+    GS: Primitive,
+{
+}
+
+trait HComputable<const N: usize, const M: usize> {
+    fn compute(&self, x: &[usize; N], out: &mut [usize; M]) -> Option<()>;
+}
+
+impl<const N: usize> HComputable<N, 0> for Nil {
+    fn compute(&self, _: &[usize; N], _: &mut [usize; 0]) -> Option<()> {
+        Some(())
     }
 }
 
-impl<F: Recursive<M, PRIMITIVE>, const N: Unsigned, const M: Unsigned, const PRIMITIVE: bool>
-    Recursive<N, PRIMITIVE> for Cn<F, [Box<dyn Computable<N, PRIMITIVE>>; M]>
-{
+fn array_split_first_mut<T, const N: usize>(arr: &mut [T; N]) -> Option<(&mut T, &mut [T; N - 1])> {
+    let (first, rest) = arr.split_first_mut()?;
+    Some((first, rest.try_into().unwrap()))
 }
 
-impl<F: Compute<M>, const N: Unsigned, const M: Unsigned, const PRIMITIVE: bool> Compute<N>
-    for Cn<F, [Box<dyn Computable<N, PRIMITIVE>>; M]>
+impl<const N: usize, const M: usize, H, T> HComputable<N, M> for Cons<H, T, M>
+where
+    H: Compute<N>,
+    T: HComputable<N, { M - 1 }>,
+{
+    fn compute(&self, x: &[usize; N], out: &mut [usize; M]) -> Option<()> {
+        let (first, rest) = array_split_first_mut(out)?;
+        *first = self.head.call(x)?;
+        self.tail.compute(x, rest)
+    }
+}
+
+impl<const N: Unsigned, const M: Unsigned, F, H, T> Compute<N> for Cn<F, Cons<H, T, M>>
+where
+    F: Compute<M>,
+    Cons<H, T, M>: HComputable<N, M>,
 {
     fn call(&self, x: &[usize; N]) -> Option<usize> {
-        std::array::try_from_fn(|i| self.gs[i].call(x)).and_then(|x| self.f.call(&x))
+        let mut buf = [0; M];
+        self.gs.compute(x, &mut buf)?;
+        self.f.call(&buf)
     }
 }
 
@@ -70,12 +117,8 @@ macro_rules! pr {
     };
 }
 
-impl<F, G, const N: Unsigned, const PRIMITIVE: bool> Recursive<N, PRIMITIVE> for Pr<F, G, PRIMITIVE>
-where
-    F: Recursive<{ N - 1 }, PRIMITIVE>,
-    G: Recursive<{ N + 1 }, PRIMITIVE>,
-{
-}
+impl<F, G> Primitive for Pr<F, G, true> {}
+impl<F, G, const PRIMITIVE: bool> Recursive for Pr<F, G, PRIMITIVE> {}
 
 // https://stackoverflow.com/a/67085709
 fn concat<T: Copy + Default, const A: usize, const B: usize>(a: &[T; A], b: &[T; B]) -> [T; A + B] {
@@ -93,6 +136,7 @@ fn array_split_last<T, const N: usize>(arr: &[T; N]) -> Option<(&T, &[T; N - 1])
 
 impl<F, G, const N: Unsigned, const PRIMITIVE: bool> Compute<N> for Pr<F, G, PRIMITIVE>
 where
+    Assert<{ N > 0 }>: True,
     F: Compute<{ N - 1 }>,
     G: Compute<{ N - 1 + 2 }>,
 {
@@ -140,7 +184,7 @@ macro_rules! mn {
     };
 }
 
-impl<F, const N: Unsigned> Recursive<N, false> for Mn<F> where F: Recursive<{ N + 1 }, false> {}
+impl<F> Recursive for Mn<F> {}
 
 impl<F, const N: Unsigned> Compute<N> for Mn<F>
 where
@@ -164,12 +208,11 @@ where
 fn test_cn() {
     use crate::*;
 
-    type T = Cn<Succ, [Box<dyn Computable<2, true>>; 1]>;
+    type T = Cn<Succ, Cons<Id<2, 1>, Nil, 1>>;
     let f: T = cn![S; id![2, 1]];
     defined_eq!(f.call(&[0, 1]), 1);
 
-    static_assertions::assert_impl_all!(T: Compute<2>, Recursive<2, false>,  Computable<2, false>);
-    static_assertions::assert_impl_all!(T: Recursive<2, true>,  Computable<2, true>);
+    static_assertions::assert_impl_all!(T: Compute<2>, Primitive, Recursive);
 
     let f = cn![S; id![2, 2]];
     defined_eq!(f.call(&[0, 1]), 2);
@@ -179,6 +222,12 @@ fn test_cn() {
 
     let f = cn![id![2, 1]; id![1, 1], S];
     defined_eq!(f.call(&[1]), 1);
+
+    type U = Cn<Succ, Cons<Mn<Id<2, 2>>, Nil, 1>>;
+    let f: U = cn![S; mn![id![2, 2]]];
+    f.call(&[0]);
+    static_assertions::assert_impl_all!(U: Compute<1>, Recursive);
+    static_assertions::assert_not_impl_any!(U: Primitive);
 }
 
 #[test]
@@ -194,8 +243,7 @@ fn test_pr() {
     defined_eq!(f.call(&[5, 2]), 0);
     defined_eq!(f.call(&[5, 50]), 0);
 
-    static_assertions::assert_impl_all!(T: Compute<2>, Recursive<2, false>,  Computable<2, false>);
-    static_assertions::assert_impl_all!(T: Recursive<2, true>,  Computable<2, true>);
+    static_assertions::assert_impl_all!(T: Compute<2>, Recursive, Primitive);
 
     // pr = Pr[s, id^3_3]
     let f = pr![S, id![3, 3]];
@@ -235,6 +283,6 @@ fn test_mn() {
     defined_eq!(f.call(&[0]), 0);
     // undefined for input != &[0]
 
-    static_assertions::assert_impl_all!(T: Compute<1>, Recursive<1, false>, Computable<1, false>);
-    static_assertions::assert_not_impl_any!(T: Recursive<1, true>, Computable<1, true>);
+    static_assertions::assert_impl_all!(T: Compute<1>, Recursive);
+    static_assertions::assert_not_impl_any!(T: Primitive);
 }

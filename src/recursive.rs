@@ -1,5 +1,21 @@
-use crate::Unsigned;
+use crate::{Cons, Nil};
 
-pub trait Recursive<const N: Unsigned, const PRIMITIVE: bool>: std::fmt::Debug {}
+pub trait Recursive {}
+pub trait Primitive: Recursive {}
 
-impl<T: Recursive<N, true>, const N: Unsigned> Recursive<N, false> for T {}
+impl<H, T, const LEN: usize> Recursive for Cons<H, T, LEN>
+where
+    H: Recursive,
+    T: Recursive,
+{
+}
+
+impl<H, T, const LEN: usize> Primitive for Cons<H, T, LEN>
+where
+    H: Primitive,
+    T: Primitive,
+{
+}
+
+impl Recursive for Nil {}
+impl Primitive for Nil {}

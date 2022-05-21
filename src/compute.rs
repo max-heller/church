@@ -1,20 +1,13 @@
 use crate::{
     funcs::basic::{Id, Succ, Zero},
-    recursive::Recursive,
-    Unsigned,
+    Primitive, Unsigned,
 };
 
 pub mod ops;
 
-pub trait Computable<const N: Unsigned, const PRIMITIVE: bool = true>:
-    Recursive<N, PRIMITIVE> + Compute<N>
-{
-}
+pub trait PrimitivelyComputable<const N: Unsigned>: Primitive + Compute<N> {}
 
-impl<T, const N: Unsigned, const PRIMITIVE: bool> Computable<N, PRIMITIVE> for T where
-    T: Recursive<N, PRIMITIVE> + Compute<N>
-{
-}
+impl<T, const N: Unsigned> PrimitivelyComputable<N> for T where T: Primitive + Compute<N> {}
 
 pub trait Compute<const N: Unsigned> {
     fn call(&self, x: &[usize; N]) -> Option<usize>;
@@ -35,5 +28,11 @@ impl Compute<1> for Succ {
 impl<const N: Unsigned, const K: Unsigned> Compute<N> for Id<N, K> {
     fn call(&self, x: &[usize; N]) -> Option<usize> {
         Some(x[K - 1])
+    }
+}
+
+impl<const N: Unsigned> Compute<N> for Box<dyn Compute<N>> {
+    fn call(&self, x: &[usize; N]) -> Option<usize> {
+        self.as_ref().call(x)
     }
 }
