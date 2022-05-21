@@ -1,5 +1,4 @@
 #![feature(generic_const_exprs)]
-#![feature(generic_arg_infer)]
 
 pub mod compute;
 pub mod funcs;
