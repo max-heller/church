@@ -218,23 +218,23 @@ where
 fn test_cn() {
     use crate::*;
 
-    type T = Cn<Succ, Cons<Id<2, 1>, Nil, 1>>;
-    let f: T = cn![S; id![2, 1]];
+    type T = Cn<Succ, Cons<Id<1>, Nil, 1>>;
+    let f: T = cn![S; id![1]];
     defined_eq!(f.call(&[0, 1]), 1);
 
     static_assertions::assert_impl_all!(T: Compute<2>, Primitive, Recursive);
 
-    let f = cn![S; id![2, 2]];
+    let f = cn![S; id![2]];
     defined_eq!(f.call(&[0, 1]), 2);
 
-    let f = cn![id![2, 2]; id![1, 1], S];
+    let f = cn![id![2]; id![1], S];
     defined_eq!(f.call(&[1]), 2);
 
-    let f = cn![id![2, 1]; id![1, 1], S];
+    let f = cn![id![1]; id![1], S];
     defined_eq!(f.call(&[1]), 1);
 
-    type U = Cn<Succ, Cons<Mn<Id<2, 2>>, Nil, 1>>;
-    let f: U = cn![S; mn![id![2, 2]]];
+    type U = Cn<Succ, Cons<Mn<Id<2>>, Nil, 1>>;
+    let f: U = cn![S; mn![id![2]]];
     f.call(&[0]);
     static_assertions::assert_impl_all!(U: Compute<1>, Recursive);
     static_assertions::assert_not_impl_any!(U: Primitive);
@@ -245,8 +245,8 @@ fn test_pr() {
     use crate::*;
 
     // pr = Pr[z, id^3_3]
-    type T = Pr<Zero, Id<3, 3>>;
-    let f: T = pr![Z, id![3, 3]];
+    type T = Pr<Zero, Id<3>>;
+    let f: T = pr![Z, id![3]];
     defined_eq!(f.call(&[1, 0]), 0);
     defined_eq!(f.call(&[5, 0]), 0);
     defined_eq!(f.call(&[5, 1]), 0);
@@ -256,27 +256,27 @@ fn test_pr() {
     static_assertions::assert_impl_all!(T: Compute<2>, Recursive, Primitive);
 
     // pr = Pr[s, id^3_3]
-    let f = pr![S, id![3, 3]];
+    let f = pr![S, id![3]];
     defined_eq!(f.call(&[0, 0]), 1);
     defined_eq!(f.call(&[1, 0]), 2);
     defined_eq!(f.call(&[4, 0]), 5);
     defined_eq!(f.call(&[4, 9]), 5);
 
     // pr = Pr[id, id^3_3]
-    let f = pr![id![1, 1], id![3, 3]];
+    let f = pr![id![1], id![3]];
     defined_eq!(f.call(&[4, 0]), 4);
     defined_eq!(f.call(&[4, 9]), 4);
 
     // pr = Pr[id, id^3_1]
     // should always output x
-    let f = pr![id![1, 1], id![3, 1]];
+    let f = pr![id![1], id![1]];
     defined_eq!(f.call(&[4, 0]), 4);
     defined_eq!(f.call(&[4, 9]), 4);
 
     // pr = Pr[id, id^3_2]
     // should always output y for s(y) if y > 0, x otherwise
     // because h(x, s(y)) = g(x, y, h(x, y))
-    let f = pr![id![1, 1], id![3, 2]];
+    let f = pr![id![1], id![2]];
     defined_eq!(f.call(&[4, 0]), 4);
     defined_eq!(f.call(&[4, 9]), 8);
 }
@@ -285,11 +285,11 @@ fn test_pr() {
 fn test_mn() {
     use crate::*;
 
-    let f = mn![id![2, 2]];
+    let f = mn![id![2]];
     defined_eq!(f.call(&[5]), 0);
 
-    type T = Mn<Id<2, 1>>;
-    let f: T = mn![id![2, 1]];
+    type T = Mn<Id<1>>;
+    let f: T = mn![id![1]];
     defined_eq!(f.call(&[0]), 0);
     // undefined for input != &[0]
 
