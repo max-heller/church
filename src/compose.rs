@@ -122,20 +122,15 @@ where
     G: Compute<{ N - 1 + 2 }>,
 {
     fn call(&self, x: &[usize; N]) -> Option<usize> {
-        let (y, x) = array_split_last(x);
-        let mut output = self.f.call(x);
+        let (&y, x) = array_split_last(x);
+        let mut output = self.f.call(x)?;
         let mut input = concat(x, &[0, 0]);
-        for y in 0..*y {
-            match output {
-                Some(out) => {
-                    input[N - 1] = y;
-                    input[N] = out;
-                    output = self.g.call(&input);
-                }
-                None => return None,
-            }
+        for y in 0..y {
+            input[N - 1] = y;
+            input[N] = output;
+            output = self.g.call(&input)?;
         }
-        output
+        Some(output)
     }
 }
 
