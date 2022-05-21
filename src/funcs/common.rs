@@ -1,104 +1,106 @@
-use super::basic::*;
-use crate::{compute::ops::*, compute::Computable, *};
-use typenum::consts::*;
+use crate::{hlist::*, *};
 
-// TODO: this is gross to make it type check, can I make it better?
-pub fn const_n(n: usize) -> impl Computable<U1> {
-    let mut f = cn![id![U1, U1]; U1; Z];
+pub fn const_n(n: usize) -> impl Compute<1> {
+    let mut f: Box<dyn Compute<1>> = Box::new(cn![id![1]; Z]);
     for _ in 0..n {
-        f = cn![
-            id![U1, U1]; U1;
-            cn![S; U1; const_n(n - 1)]
-        ];
+        f = Box::new(cn![S; f]);
     }
     f
 }
 
-pub fn sum() -> impl Computable<U2> {
-    pr![id![U1, U1], cn![S; U3; id![U3, U3]]]
-}
+pub type Sum = Pr<Id<1>, Cn<Succ, Cons<Id<3>, Nil, 1>>>;
 
-pub fn product() -> impl Computable<U2> {
-    pr![Z, cn![sum(); U3; id![U3, U1], id![U3, U3]]]
-}
+pub const SUM: Sum = pr(id![1], cn![S; id![3]]);
 
-pub fn power() -> impl Computable<U2> {
-    pr![cn![S; U1; Z], cn![product(); U3; id![U3, U1], id![U3, U3]]]
-}
+pub type Product = Pr<Zero, Cn<Sum, Cons<Id<1>, Cons<Id<3>, Nil, 1>, 2>>>;
 
-pub fn superpower() -> impl Computable<U2> {
-    pr![cn![S; U1; Z], cn![power(); U3; id![U3, U1], id![U3, U3]]]
-}
+pub const PRODUCT: Product = pr(Z, cn![SUM; id![1], id![3]]);
 
-fn one_place_recursive_func<F, G>(f: F, g: G) -> impl Computable<U1>
+pub type Power = Pr<Cn<Succ, Cons<Zero, Nil, 1>>, Cn<Product, Cons<Id<1>, Cons<Id<3>, Nil, 1>, 2>>>;
+
+pub const POWER: Power = pr(cn![S; Z], cn![PRODUCT; id![1], id![3]]);
+
+pub type Superpower =
+    Pr<Cn<Succ, Cons<Zero, Nil, 1>>, Cn<Power, Cons<Id<1>, Cons<Id<3>, Nil, 1>, 2>>>;
+
+pub const SUPERPOWER: Superpower = pr(cn![S; Z], cn![POWER; id![1], id![3]]);
+
+const fn one_place_recursive_func<F, G>(
+    f: F,
+    g: G,
+) -> Cn<Pr<F, G>, Cons<Id<1>, Cons<Id<1>, Nil, 1>, 2>>
 where
-    F: Computable<U1>,
-    G: Computable<U3>,
+    F: Compute<1>,
+    G: Compute<3>,
 {
-    cn![pr![f, g]; U1; id![U1, U1], id![U1, U1]]
+    cn![pr(f, g); id![1], id![1]]
 }
 
-pub fn predecessor() -> impl Computable<U1> {
-    one_place_recursive_func(Z, id![U3, U2])
-}
+pub type Predecessor = Cn<Pr<Zero, Id<2>>, Cons<Id<1>, Cons<Id<1>, Nil, 1>, 2>>;
 
-pub fn difference() -> impl Computable<U2> {
-    pr!(id![U1, U1], cn![predecessor(); U3; id![U3, U3]])
-}
+pub const PREDECESSOR: Predecessor = one_place_recursive_func(Z, id![2]);
 
-pub fn antisignum() -> impl Computable<U1> {
-    cn![difference(); U1; cn![S; U1; Z], id![U1, U1]]
-}
+pub type Difference = Pr<Id<1>, Cn<Predecessor, Cons<Id<3>, Nil, 1>>>;
 
-pub fn signum() -> impl Computable<U1> {
-    cn![difference(); U1; cn![S; U1; Z], antisignum()]
-}
+pub const DIFFERENCE: Difference = pr(id![1], cn![PREDECESSOR; id![3]]);
+
+pub type Antisignum = Cn<Difference, Cons<Cn<Succ, Cons<Zero, Nil, 1>>, Cons<Id<1>, Nil, 1>, 2>>;
+
+pub const ANTISIGNUM: Antisignum = cn![DIFFERENCE; cn![S; Z], id![1]];
+
+pub type Signum = Cn<Difference, Cons<Cn<Succ, Cons<Zero, Nil, 1>>, Cons<Antisignum, Nil, 1>, 2>>;
+
+pub const SIGNUM: Signum = cn![DIFFERENCE; cn![S; Z], ANTISIGNUM];
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{args, compute::Compute, defined_eq};
     use quickcheck_macros::quickcheck;
 
-    // TODO: takes far too long, likely due to constructing function each time?
-    // #[quickcheck]
-    // fn const_n_is_n(n: usize, x: usize) -> bool {
-    //     Some(n) == const_n(n).call(args![x])
-    // }
-
     #[quickcheck]
-    fn sum_is_sum(a: usize, b: usize) -> bool {
-        Some(a + b) == sum().call(args![a, b])
+    fn const_n_is_n(n: u8, x: u8) -> bool {
+        let (n, x) = (n as usize, x as usize);
+        Some(n) == const_n(n).call(&[x])
     }
 
     #[quickcheck]
-    fn product_is_product(a: usize, b: usize) -> bool {
-        Some(a * b) == product().call(args![a, b])
+    fn sum_is_sum(a: u8, b: u8) -> bool {
+        let (a, b) = (a as usize, b as usize);
+        Some(a + b) == SUM.call(&[a, b])
+    }
+
+    #[quickcheck]
+    fn product_is_product(a: u8, b: u8) -> bool {
+        let (a, b) = (a as usize, b as usize);
+        Some(a * b) == PRODUCT.call(&[a, b])
     }
 
     #[test]
     fn test_power() {
-        let pow = power();
-        defined_eq!(pow.call(args![2, 3]), 8);
+        defined_eq!(POWER.call(&[2, 3]), 8);
     }
 
     #[quickcheck]
-    fn predecessor_is_predecessor(x: usize) -> bool {
-        Some(x.saturating_sub(1)) == predecessor().call(args![x])
+    fn predecessor_is_predecessor(x: u8) -> bool {
+        let x = x as usize;
+        Some(x.saturating_sub(1)) == PREDECESSOR.call(&[x])
     }
 
     #[quickcheck]
-    fn difference_is_difference(x: usize, y: usize) -> bool {
-        Some(x.saturating_sub(y)) == difference().call(args![x, y])
+    fn difference_is_difference(x: u8, y: u8) -> bool {
+        let (x, y) = (x as usize, y as usize);
+        Some(x.saturating_sub(y)) == DIFFERENCE.call(&[x, y])
     }
 
     #[quickcheck]
-    fn antisignum_is_antisignum(x: usize) -> bool {
-        Some(1usize.saturating_sub(x)) == antisignum().call(args![x])
+    fn antisignum_is_antisignum(x: u8) -> bool {
+        let x = x as usize;
+        Some(1usize.saturating_sub(x)) == ANTISIGNUM.call(&[x])
     }
 
     #[quickcheck]
-    fn signum_is_signum(x: usize) -> bool {
-        Some(1usize.saturating_sub(1usize.saturating_sub(x))) == signum().call(args![x])
+    fn signum_is_signum(x: u8) -> bool {
+        let x = x as usize;
+        Some(1usize.saturating_sub(1usize.saturating_sub(x))) == SIGNUM.call(&[x])
     }
 }
