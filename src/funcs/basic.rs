@@ -1,4 +1,4 @@
-use crate::{recursive::Recursive, Primitive};
+use crate::{recursive::Recursive, PrimitiveRecursive};
 
 #[derive(Debug)]
 pub struct Zero;
@@ -24,8 +24,10 @@ macro_rules! id {
 }
 
 impl Recursive for Zero {}
-impl Primitive for Zero {}
+impl PrimitiveRecursive for Zero {}
+
 impl Recursive for Succ {}
-impl Primitive for Succ {}
+impl PrimitiveRecursive for Succ {}
+
 impl<const K: usize> Recursive for Id<K> {}
-impl<const K: usize> Primitive for Id<K> {}
+impl<const K: usize> PrimitiveRecursive for Id<K> {}

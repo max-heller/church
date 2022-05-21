@@ -1,7 +1,10 @@
-use crate::{Cons, Nil};
+use crate::hlist::{Cons, Nil};
 
 pub trait Recursive {}
-pub trait Primitive: Recursive {}
+pub trait PrimitiveRecursive: Recursive {}
+
+impl Recursive for Nil {}
+impl PrimitiveRecursive for Nil {}
 
 impl<H, T, const LEN: usize> Recursive for Cons<H, T, LEN>
 where
@@ -10,12 +13,9 @@ where
 {
 }
 
-impl<H, T, const LEN: usize> Primitive for Cons<H, T, LEN>
+impl<H, T, const LEN: usize> PrimitiveRecursive for Cons<H, T, LEN>
 where
-    H: Primitive,
-    T: Primitive,
+    H: PrimitiveRecursive,
+    T: PrimitiveRecursive,
 {
 }
-
-impl Recursive for Nil {}
-impl Primitive for Nil {}

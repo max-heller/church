@@ -1,13 +1,4 @@
-use crate::{
-    funcs::basic::{Id, Succ, Zero},
-    Primitive,
-};
-
-pub mod ops;
-
-pub trait PrimitivelyComputable<const N: usize>: Primitive + Compute<N> {}
-
-impl<T, const N: usize> PrimitivelyComputable<N> for T where T: Primitive + Compute<N> {}
+use crate::funcs::basic::{Id, Succ, Zero};
 
 pub trait Compute<const N: usize> {
     fn call(&self, x: &[usize; N]) -> Option<usize>;

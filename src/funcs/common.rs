@@ -1,5 +1,4 @@
-use super::basic::*;
-use crate::{compute::ops::*, compute::Compute, *};
+use crate::*;
 
 pub fn const_n(n: usize) -> impl Compute<1> {
     let mut f: Box<dyn Compute<1>> = Box::new(cn![id![1]; Z]);
@@ -10,19 +9,19 @@ pub fn const_n(n: usize) -> impl Compute<1> {
 }
 
 pub fn sum() -> impl Compute<2> {
-    pr![id![1], cn![S; id![3]]]
+    pr(id![1], cn![S; id![3]])
 }
 
 pub fn product() -> impl Compute<2> {
-    pr![Z, cn![sum(); id![1], id![3]]]
+    pr(Z, cn![sum(); id![1], id![3]])
 }
 
 pub fn power() -> impl Compute<2> {
-    pr![cn![S; Z], cn![product(); id![1], id![3]]]
+    pr(cn![S; Z], cn![product(); id![1], id![3]])
 }
 
 pub fn superpower() -> impl Compute<2> {
-    pr![cn![S; Z], cn![power(); id![1], id![3]]]
+    pr(cn![S; Z], cn![power(); id![1], id![3]])
 }
 
 fn one_place_recursive_func<F, G>(f: F, g: G) -> impl Compute<1>
@@ -30,7 +29,7 @@ where
     F: Compute<1>,
     G: Compute<3>,
 {
-    cn![pr![f, g]; id![1], id![1]]
+    cn![pr(f, g); id![1], id![1]]
 }
 
 pub fn predecessor() -> impl Compute<1> {
@@ -38,7 +37,7 @@ pub fn predecessor() -> impl Compute<1> {
 }
 
 pub fn difference() -> impl Compute<2> {
-    pr!(id![1], cn![predecessor(); id![3]])
+    pr(id![1], cn![predecessor(); id![3]])
 }
 
 pub fn antisignum() -> impl Compute<1> {
@@ -52,7 +51,6 @@ pub fn signum() -> impl Compute<1> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{compute::Compute, defined_eq};
     use quickcheck_macros::quickcheck;
 
     #[quickcheck]
