@@ -155,10 +155,8 @@ where
         let mut input = concat(x, &[0]);
         for y in 0.. {
             input[N] = y;
-            match self.f.call(&input) {
-                None => return None,
-                Some(0) => return Some(y),
-                Some(_) => continue,
+            if let 0 = self.f.call(&input)? {
+                return Some(y);
             }
         }
         return None;
